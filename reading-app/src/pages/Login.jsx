@@ -1,0 +1,63 @@
+import { useState } from "react";
+import "../style/Login.css";
+
+function Login() {
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("");
+
+  function handleLogin(event) {
+    event.preventDefault();
+
+    if (name === "student" && password === "1234") {
+      alert("Login successful!");
+    } else {
+      alert("Incorrect name or password.");
+    }
+  }
+
+  return (
+    <div className="login-container">
+      
+      
+      <div className="login-box">
+
+        <h1>Login</h1>
+
+        <form onSubmit={handleLogin}>
+
+          <label>Name</label>
+          <input
+            type="text"
+            placeholder="Enter name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+          />
+
+          <label>Password</label>
+          <input
+            type="password"
+            placeholder="Enter password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+
+        <label>Roles</label>
+        <select>
+        <option value="teacher">Teacher</option>
+        <option value="student">Student</option>
+        <option value="manager">Manager</option>
+        </select>
+
+          <button type="submit">
+            Login
+          </button>
+
+        </form>
+
+      </div>
+    </div>
+  );
+}
+
+export default Login;
