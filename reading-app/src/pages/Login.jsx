@@ -19,14 +19,19 @@ function Login() {
   return (
     <div className="login-container">
       
+     <div className="school-header">
+        <h1 className="school-title">
+          Medroso-Mendoza National High School
+          <span className="subtitle">Reading System</span>
+        </h1>
+      </div>
       
       <div className="login-box">
-
-        <h1>Login</h1>
+        <h1 className="login-word">Login</h1>
 
         <form onSubmit={handleLogin}>
 
-          <label>Name</label>
+          <label className="word">Name</label>
           <input
             type="text"
             placeholder="Enter name"
@@ -34,7 +39,7 @@ function Login() {
             onChange={(event) => setName(event.target.value)}
           />
 
-          <label>Password</label>
+          <label className="word">Password</label>
           <input
             type="password"
             placeholder="Enter password"
@@ -42,14 +47,14 @@ function Login() {
             onChange={(event) => setPassword(event.target.value)}
           />
 
-        <label>Roles</label>
-        <select>
+        <label className="word">Roles</label>
+        <select className="role">
         <option value="teacher">Teacher</option>
         <option value="student">Student</option>
         <option value="manager">Manager</option>
         </select>
 
-          <button type="submit">
+          <button type="submit" className="login-button">
             Login
           </button>
 

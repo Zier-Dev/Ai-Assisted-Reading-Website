@@ -3,13 +3,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: #4c8bc7;
+  flex-direction: column;
 }
 
 .login-box {
   width: 350px;
   padding: 30px;
   border: 1px solid #ddd;
-  border-radius: 10px;
+  border-radius: 20px;
+  background-color: #fff;
 }
 
 .login-box h1 {
@@ -35,3 +38,79 @@
   cursor: pointer;
 }
 
+.role{
+  width: 100%;
+  height: 30px;
+
+}
+
+.login-button {
+  background-color: #4c8bc7;
+  color: white;
+  border: none;
+  border-radius: 10px;
+}
+
+.login-button:hover {
+  background-color: #3948d1;
+}
+
+.school-title {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.school-header {
+  text-align: center;
+  margin-bottom: 3rem; 
+}
+
+
+.school-title .subtitle {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 0.25rem;
+}
+
+.word{
+  color: #4c8bc7;
+  font-size: 18px;
+}
+
+.login-word{
+  color: #4c8bc7;
+  font-size: 30px;
+  text-align: center;
+}
+
+option{
+  color: #ffffff;
+}
+
+select{
+  color: #4c8bc7;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 16px;
+  border: 2px solid #4c8bc7;
+}
+
+input{
+  border-radius: 10px;
+  border: 2px solid #4c8bc7;
+}
+
+select:hover{
+  background-color: #4c8bc7;
+  color: white;
+}
+
+option:hover{
+  background-color: #4c8bc7;
+  color: white;
+}
