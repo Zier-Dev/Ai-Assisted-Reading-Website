@@ -3,7 +3,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #4c8bc7;
+  background-color: #0D47A1;
   flex-direction: column;
 }
 
@@ -45,7 +45,7 @@
 }
 
 .login-button {
-  background-color: #4c8bc7;
+  background-color: #0D47A1;
   color: white;
   border: none;
   border-radius: 10px;
@@ -78,39 +78,46 @@
 }
 
 .word{
-  color: #4c8bc7;
+  color: #0D47A1;
   font-size: 18px;
 }
 
 .login-word{
-  color: #4c8bc7;
+  color: #0D47A1;
   font-size: 30px;
   text-align: center;
 }
 
 option{
-  color: #ffffff;
+  color: #0D47A1;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 14px;
+  border: 2px solid #0D47A1;
+  background-color: white;
+  padding: 8px 16px;
 }
 
 select{
-  color: #4c8bc7;
+  color: #0D47A1;
   border-radius: 10px;
   text-align: center;
-  font-size: 16px;
-  border: 2px solid #4c8bc7;
+  font-size: 14px;
+  border: 2px solid #0D47A1;
 }
 
 input{
   border-radius: 10px;
-  border: 2px solid #4c8bc7;
+  border: 2px solid #0D47A1;
 }
 
 select:hover{
-  background-color: #4c8bc7;
+  background-color: #0D47A1;
   color: white;
+  border-color: #0D47A1;
 }
 
 option:hover{
-  background-color: #4c8bc7;
+  background-color: #0D47A1;
   color: white;
 }

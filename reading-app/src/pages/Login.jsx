@@ -21,7 +21,7 @@ function Login() {
       
      <div className="school-header">
         <h1 className="school-title">
-          Medroso-Mendoza National High School
+          Medroso-Mendoza National High School 
           <span className="subtitle">Reading System</span>
         </h1>
       </div>
