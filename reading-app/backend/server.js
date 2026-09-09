@@ -6,153 +6,68 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// ============== TEST ROUTES ==============
 
-// Test database connection
-app.get('/api/test', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT NOW() as current_time');
-    res.json({ 
-      message: '✅ Database connected!', 
-      time: result.rows[0].current_time 
-    });
-  } catch (error) {
-    console.error('Database test failed:', error);
-    res.status(500).json({ error: 'Database connection failed' });
-  }
-});
-
-// Get all users
+// Get all users (for debugging)
 app.get('/api/users', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, email, name, role, created_at FROM users ORDER BY id'
-    );
+    const result = await pool.query('SELECT * FROM users');
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Failed to fetch users' });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Get user by ID
-app.get('/api/users/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await pool.query(
-      'SELECT id, email, name, role, created_at FROM users WHERE id = $1',
-      [id]
-    );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ error: 'Failed to fetch user' });
-  }
-});
 
-// ============== AUTH ROUTES ==============
-
-// Login
+// LOGIN ENDPOINT - FIXED FOR YOUR TABLE
 app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { user, password, role } = req.body;
+
   
   try {
-    // Find user by email
+    // Query using the 'user' column
     const result = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
+      'SELECT * FROM users WHERE "user" = $1',
+      [user]
     );
     
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'User not found' });
     }
     
-    const user = result.rows[0];
+    const userData = result.rows[0];
     
-    // In production: Compare hashed password using bcrypt
-    // For now, just check if password matches (temporarily)
-    // Remove this check once you add bcrypt
+
+    if (userData.password !== password) {
+      return res.status(401).json({ error: 'Wrong password' });
+    }
+
+     if (role && userData.role !== role) {
+      return res.status(403).json({ 
+        error: 'Role mismatch'
+      });
+    }
     
-    // Remove password_hash from response
-    const { password_hash, ...userWithoutPassword } = user;
+   
     
-    // Generate JWT token (install jsonwebtoken first)
-    const jwt = require('jsonwebtoken');
-    const token = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email, 
-        role: user.role 
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-    
+    // Return user data (no token for now)
     res.json({
-      user: userWithoutPassword,
-      token: token,
+      success: true,
+      user: {
+        id: userData.user_id,
+        username: userData.user,
+        name: userData.full_name,
+        role: userData.role
+      },
       message: 'Login successful'
     });
     
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    res.status(500).json({ error: error.message });
   }
 });
-
-// ============== REGISTER ROUTE ==============
-
-// Register new user
-app.post('/api/register', async (req, res) => {
-  const { email, password, name, role } = req.body;
-  
-  try {
-    // Check if user exists
-    const checkUser = await pool.query(
-      'SELECT id FROM users WHERE email = $1',
-      [email]
-    );
-    
-    if (checkUser.rows.length > 0) {
-      return res.status(400).json({ error: 'Email already registered' });
-    }
-    
-    // In production: Hash password with bcrypt
-    // For now, store plain password (temporarily)
-    
-    const result = await pool.query(
-      `INSERT INTO users (email, password_hash, name, role)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, email, name, role, created_at`,
-      [email, password, name, role || 'Student']
-    );
-    
-    const user = result.rows[0];
-    
-    res.status(201).json({
-      user,
-      message: 'User registered successfully'
-    });
-    
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Registration failed' });
-  }
-});
-
-// ============== START SERVER ==============
 
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`📊 Database: ${process.env.DB_DATABASE}`);
-  console.log(`🔗 Test: http://localhost:${PORT}/api/test`);
 });
