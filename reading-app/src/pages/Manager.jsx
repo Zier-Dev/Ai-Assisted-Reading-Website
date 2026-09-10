@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import "../style/Manager.css";
 
+  function ModalView({IsOpen, onClose, children}) {
+    if (!IsOpen) return null;
+
+    return (
+        <div className = "modal-overlay" onClick={onClose}>
+        <div className = "modal-box" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
+       
+    );
+  }
+
 const ManagerDashboard = () => {
   // Get user from localStorage (no useAuth)
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -29,9 +42,13 @@ const ManagerDashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    window.location.href = '/login';
+    const confirmLogout = window.confirm('Are you sure you want to logout?');
+    
+    if (confirmLogout) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
   };
 
   // Get role badge color
@@ -54,6 +71,10 @@ const ManagerDashboard = () => {
       default: return '👤';
     }
   };
+
+  const [isOpen, setIsOpen] = useState(false);
+
+
 
   return (
     <div className="manager-dashboard">
@@ -138,12 +159,12 @@ const ManagerDashboard = () => {
                         </span>
                       </td>
                       <td>
-                        <button 
-                          className="view-btn"
-                          onClick={() => alert(`User: ${user.full_name || user.name}\nRole: ${user.role}`)}
+                        <button  
+                          className="view-btn" onClick={() => setIsOpen(true)}
                         >
                           View
                         </button>
+                        
                       </td>
                     </tr>
                   ))
@@ -153,6 +174,15 @@ const ManagerDashboard = () => {
           </div>
         )}
       </div>
+          <ModalView  IsOpen={isOpen} onClose={() => setIsOpen(false)}>
+                        <div className = "modal-view"> 
+                        <p>sdsdsad</p>
+                         <button onClick={() => setIsOpen(false)}>Close</button>
+                        </div>
+                          
+        </ModalView>
+     
+       
     </div>
   );
 };

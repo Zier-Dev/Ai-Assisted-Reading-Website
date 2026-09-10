@@ -10,7 +10,6 @@ app.use(cors());
 app.use(express.json());
 
 
-// Get all users (for debugging)
 app.get('/api/users', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM users');
