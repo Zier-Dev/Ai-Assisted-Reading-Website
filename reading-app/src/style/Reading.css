@@ -1,0 +1,215 @@
+* {
+  box-sizing: border-box;
+}
+
+.reading-page {
+  min-height: 100vh;
+  background: #f4f6f8;
+  font-family: Arial, sans-serif;
+}
+
+/* Header */
+
+.reading-header {
+  background: #1f2937;
+  color: white;
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reading-header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.reading-header p {
+  margin: 5px 0 0;
+  color: #d1d5db;
+}
+
+.logout-button {
+  background: white;
+  color: #1f2937;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background: #e5e7eb;
+}
+
+/* Main content */
+
+.reading-content {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.welcome {
+  margin-bottom: 25px;
+}
+
+.welcome h2 {
+  margin-bottom: 5px;
+}
+
+.welcome p {
+  color: #666;
+}
+
+/* Reading card */
+
+.reading-card {
+  background: white;
+  padding: 35px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.reading-card h2 {
+  margin-top: 0;
+}
+
+/* Difficulty */
+
+.difficulty-buttons {
+  display: flex;
+  gap: 15px;
+  margin: 25px 0;
+}
+
+.difficulty-buttons button {
+  flex: 1;
+  padding: 14px;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.difficulty-buttons button:hover {
+  border-color: #333;
+}
+
+.difficulty-buttons .selected {
+  background: #1f2937;
+  color: white;
+  border-color: #1f2937;
+}
+
+.selected-difficulty {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+/* Start button */
+
+.start-button {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  background: #1f2937;
+  color: white;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.start-button:hover {
+  background: #111827;
+}
+
+/* Reading */
+
+.reading-title span {
+  display: inline-block;
+  background: #e5e7eb;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.reading-title h2 {
+  font-size: 28px;
+}
+
+.paragraph {
+  margin-top: 25px;
+  padding: 25px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border-left: 4px solid #1f2937;
+}
+
+.paragraph p {
+  font-size: 21px;
+  line-height: 1.9;
+  color: #333;
+}
+
+/* Reading buttons */
+
+.reading-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.back-button,
+.read-button {
+  flex: 1;
+  padding: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.back-button {
+  background: white;
+  border: 1px solid #ccc;
+}
+
+.read-button {
+  background: #1f2937;
+  color: white;
+  border: none;
+}
+
+.read-button:hover {
+  background: #111827;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .reading-header {
+    padding: 15px 20px;
+  }
+
+  .reading-header h1 {
+    font-size: 22px;
+  }
+
+  .difficulty-buttons {
+    flex-direction: column;
+  }
+
+  .reading-card {
+    padding: 20px;
+  }
+
+  .paragraph p {
+    font-size: 18px;
+  }
+
+  .reading-actions {
+    flex-direction: column;
+  }
+}

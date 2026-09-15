@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "../style/Login.css";
+import Reading from "./Reading";
 
 function Login() {
   const [name, setName] = useState("");
@@ -37,18 +38,13 @@ function Login() {
    if (response.ok) {
         // Save user data
         localStorage.setItem('user', JSON.stringify(data.user));
-        
-        console.log('User role:', data.user.role); // Debug
-      
         if (data.user.role === 'Manager') {
           window.location.href = '/Manager';
         } else if (data.user.role === 'Teacher') {
           window.location.href = '/teacher-dashboard';
         } else if (data.user.role === 'Student') {
-          window.location.href = '/student-dashboard';
-        } else {
-          window.location.href = '/dashboard';
-        }
+          window.location.href = '/Reading';
+        } 
       } else {
         setError(data.error || "Login failed");
       }
