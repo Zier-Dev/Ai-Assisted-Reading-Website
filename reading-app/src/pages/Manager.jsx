@@ -176,19 +176,28 @@ const ManagerDashboard = () => {
       <ModalView isOpen={isOpen} onClose={() => setIsOpen(false)}>
         {selectedUser && (
           <div className="modal-view">
-            <h2>User Details</h2>
-            <p className="info">
-              <strong>ID:</strong> {selectedUser.user_id || selectedUser.id}
-            </p>
-            <p className="info">
-              <strong>Username:</strong> {selectedUser.user || selectedUser.email}
-            </p>
-            <p className="info">
-              <strong>Full Name:</strong> {selectedUser.full_name || selectedUser.name}
-            </p>
-            <p className="info">
-              <strong>Role:</strong> {selectedUser.role}
-            </p>
+
+            <table className= "modal-table">
+              <h2>User Details</h2>
+              <thead> 
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Full Name</th>
+                  <th>Role</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <td>{selectedUser.user_id || selectedUser.id}</td>
+                  <td>{selectedUser.user || selectedUser.email}</td>
+                  <td>{selectedUser.full_name || selectedUser.name}</td>
+                  <td>{selectedUser.role}</td>
+                </tr>
+              </tbody>
+               </table>
+            
 
             <button
               className="delete-btn"

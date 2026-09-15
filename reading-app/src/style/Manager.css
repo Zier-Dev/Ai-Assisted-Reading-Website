@@ -228,7 +228,7 @@ html, body, #root {
 }
 
 .modal-box{
-  width: 400px;
+  width: 600px;
   min-height: 200px;
   background: white;
   border-radius: 10px;
@@ -269,6 +269,35 @@ html, body, #root {
   
 }
 
-.info{
-  color: #000000;
+.delete-btn{
+  margin-top: auto;
+  background-color:#dc3545;
+  color: white;
+  height: 40px;
+  width: 100%;
+  border-radius: 15px;
+  border: solid;
 }
+
+.modal-table{
+   width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.modal-table th {
+  background: #0D47A1;
+  color: white;
+  padding: 12px 15px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+
+
