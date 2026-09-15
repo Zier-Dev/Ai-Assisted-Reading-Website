@@ -26,7 +26,6 @@ app.post('/api/login', async (req, res) => {
 
   
   try {
-    // Query using the 'user' column
     const result = await pool.query(
       'SELECT * FROM users WHERE "user" = $1',
       [user]
@@ -69,4 +68,17 @@ app.post('/api/login', async (req, res) => {
 });
 
 app.listen(PORT, () => {
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('DELETE FROM users WHERE user_id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });

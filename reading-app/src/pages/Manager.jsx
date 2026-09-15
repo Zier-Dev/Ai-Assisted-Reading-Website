@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import "../style/Manager.css";
 
-  function ModalView({IsOpen, onClose, children}) {
-    if (!IsOpen) return null;
+// ✅ Fixed: isOpen (lowercase) + added close button
+function ModalView({ isOpen, onClose, children }) {
+  if (!isOpen) return null;
 
-    return (
-        <div className = "modal-overlay" onClick={onClose}>
-        <div className = "modal-box" onClick={(e) => e.stopPropagation()}>
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
         {children}
       </div>
     </div>
-       
-    );
-  }
+  );
+}
 
 const ManagerDashboard = () => {
-  // Get user from localStorage (no useAuth)
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch all users from database
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -43,7 +44,6 @@ const ManagerDashboard = () => {
 
   const handleLogout = () => {
     const confirmLogout = window.confirm('Are you sure you want to logout?');
-    
     if (confirmLogout) {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
@@ -51,30 +51,36 @@ const ManagerDashboard = () => {
     }
   };
 
-  // Get role badge color
-  const getRoleColor = (role) => {
-    switch(role) {
-      case 'Admin': return 'badge-admin';
-      case 'Manager': return 'badge-manager';
-      case 'Teacher': return 'badge-teacher';
-      case 'Student': return 'badge-student';
-      default: return 'badge-default';
-    }
+  
+  const handleViewUser = (user) => {
+    setSelectedUser(user);
+    setIsOpen(true);
   };
 
-  // Get role emoji
-  const getRoleEmoji = (role) => {
-    switch(role) {
-      case 'Manager': return;
-      case 'Teacher': return;
-      case 'Student': return;
-      default: return '👤';
+ 
+  const handleDeleteUser = async (userId) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this user?');
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsOpen(false);
+        fetchUsers();
+        alert('User deleted successfully!');
+      } else {
+        alert(data.error || 'Failed to delete user');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Cannot connect to server');
     }
   };
-
-  const [isOpen, setIsOpen] = useState(false);
-
-
 
   return (
     <div className="manager-dashboard">
@@ -120,7 +126,7 @@ const ManagerDashboard = () => {
         <div className="section-header">
           <h2>All Users</h2>
           <button onClick={fetchUsers} className="refresh-btn">
-           Refresh
+            Refresh
           </button>
         </div>
 
@@ -148,41 +154,58 @@ const ManagerDashboard = () => {
                     </td>
                   </tr>
                 ) : (
-                  users.map((user) => (
-                    <tr key={user.user_id || user.id}>
-                      <td>{user.user_id || user.id}</td>
-                      <td>{user.user || user.email}</td>
-                      <td>{user.full_name || user.name}</td>
-                      <td>
-                        <span className={`role-badge ${getRoleColor(user.role)}`}>
-                          {getRoleEmoji(user.role)} {user.role}
-                        </span>
-                      </td>
-                      <td>
-                        <button  
-                          className="view-btn" onClick={() => setIsOpen(true)}
-                        >
-                          View
-                        </button>
-                        
-                      </td>
-                    </tr>
-                  ))
+                              users.map((user) => (
+                            <tr key={user.user_id}>
+                  <td>{user.user_id}</td>
+                  <td>{user.user}</td>
+                  <td>{user.full_name}</td>
+                  <td>{user.role}</td>
+                  <td>
+                    <button onClick={() => handleViewUser(user)}>View</button>
+                  </td>
+                </tr>
+              ))
                 )}
               </tbody>
             </table>
           </div>
         )}
       </div>
-          <ModalView  IsOpen={isOpen} onClose={() => setIsOpen(false)}>
-                        <div className = "modal-view"> 
-                        <p>sdsdsad</p>
-                         <button onClick={() => setIsOpen(false)}>Close</button>
-                        </div>
-                          
-        </ModalView>
-     
-       
+
+      { }
+      <ModalView isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        {selectedUser && (
+          <div className="modal-view">
+            <h2>User Details</h2>
+            <p className="info">
+              <strong>ID:</strong> {selectedUser.user_id || selectedUser.id}
+            </p>
+            <p className="info">
+              <strong>Username:</strong> {selectedUser.user || selectedUser.email}
+            </p>
+            <p className="info">
+              <strong>Full Name:</strong> {selectedUser.full_name || selectedUser.name}
+            </p>
+            <p className="info">
+              <strong>Role:</strong> {selectedUser.role}
+            </p>
+
+            <button
+              className="delete-btn"
+              onClick={() => handleDeleteUser(selectedUser.user_id || selectedUser.id)}
+            >
+              Delete User
+            </button>
+
+            <button
+              className="close-btn"
+              onClick={() => setIsOpen(false)}
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </ModalView>
     </div>
   );
 };
