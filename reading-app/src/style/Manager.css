@@ -235,18 +235,18 @@ html, body, #root {
   padding: 30px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   position: relative;
-}
-
-
-.modal-view{
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 500px;
-  margin: 0;
+  flex-direction: column;
 }
+
+.modal-view {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 .modal-overlay{
- position: fixed;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
@@ -258,29 +258,29 @@ html, body, #root {
 }
 
 .close-btn{
-  margin-top: auto;
   background-color:#0056b3;
   color: white;
   height: 40px;
   width: 100%;
   border-radius: 15px;
-  border: solid;
-  margin-right: 50px;
+  border: none;
+  cursor: pointer;
   
 }
 
 .delete-btn{
-  margin-top: auto;
   background-color:#dc3545;
   color: white;
   height: 40px;
   width: 100%;
   border-radius: 15px;
-  border: solid;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 10px;
 }
 
 .modal-table{
-   width: 100%;
+  width: 100%;
   border-collapse: collapse;
   margin: 20px 0;
   border-radius: 8px;
@@ -297,7 +297,36 @@ html, body, #root {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  
+}
+
+.modal-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+  color: #333;
+}
+
+.modal-view h2{
+  margin: 0 0 10px;
+  color: #0D47A1;
 }
 
 
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+  width: 100%;
+}
+
+.view-btn{
+  
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
 

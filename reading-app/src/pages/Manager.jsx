@@ -161,7 +161,9 @@ const ManagerDashboard = () => {
                   <td>{user.full_name}</td>
                   <td>{user.role}</td>
                   <td>
-                    <button onClick={() => handleViewUser(user)}>View</button>
+                    <button className="view-btn" onClick={() => handleViewUser(user)}>
+                      View
+                    </button>
                   </td>
                 </tr>
               ))
@@ -176,9 +178,8 @@ const ManagerDashboard = () => {
       <ModalView isOpen={isOpen} onClose={() => setIsOpen(false)}>
         {selectedUser && (
           <div className="modal-view">
-
+             <h2>User Details</h2>
             <table className= "modal-table">
-              <h2>User Details</h2>
               <thead> 
                 <tr>
                   <th>ID</th>
