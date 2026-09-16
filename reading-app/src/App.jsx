@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Login from './pages/Login';
-import ManagerDashboard from './pages/Manager';
+import AdminDashboard from './pages/Admin';
 import Reading from './pages/Reading';
 import './App.css';
 
@@ -19,8 +19,8 @@ function App() {
         setUser(userData);
 
         // Check the user's role
-        if (userData.role === 'Manager') {
-          setCurrentPage('manager');
+        if (userData.role === 'Admin') {
+          setCurrentPage('admin');
         } else if (userData.role === 'Student') {
           setCurrentPage('reading');
         }
@@ -36,8 +36,8 @@ function App() {
     setUser(userData);
 
     // Send the user to the correct page
-    if (userData.role === 'Manager') {
-      setCurrentPage('manager');
+    if (userData.role === 'Admin') {
+      setCurrentPage('admin');
     } else if (userData.role === 'Student') {
       setCurrentPage('reading');
     }
@@ -57,10 +57,10 @@ function App() {
     return <Login onLogin={handleLogin} />;
   }
 
-  // Manager page
-  if (currentPage === 'manager') {
+  
+  if (currentPage === 'admin') {
     return (
-      <ManagerDashboard
+      <AdminDashboard
         user={user}
         onLogout={handleLogout}
       />

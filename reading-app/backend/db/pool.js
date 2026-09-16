@@ -10,14 +10,5 @@ const pool = new Pool({
   database: process.env.DB_DATABASE,
 });
 
-// Test connection on startup
-pool.connect((err, client, release) => {
-  if (err) {
-    console.error('❌ Database connection failed:', err.stack);
-  } else {
-    console.log('✅ Database connected successfully!');
-    release();
-  }
-});
 
 module.exports = pool;

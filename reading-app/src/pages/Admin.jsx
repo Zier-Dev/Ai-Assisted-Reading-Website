@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import "../style/Manager.css";
+import "../style/Admin.css";
 
-// ✅ Fixed: isOpen (lowercase) + added close button
+
 function ModalView({ isOpen, onClose, children }) {
   if (!isOpen) return null;
 
@@ -14,7 +14,7 @@ function ModalView({ isOpen, onClose, children }) {
   );
 }
 
-const ManagerDashboard = () => {
+const AdminDashboard = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,12 +83,12 @@ const ManagerDashboard = () => {
   };
 
   return (
-    <div className="manager-dashboard">
+    <div className="admin-dashboard">
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-left">
-          <h1>Manager Dashboard</h1>
-          <p>Welcome back, {user?.name || user?.full_name || 'Manager'}!</p>
+          <h1>Admin Dashboard</h1>
+          <p>Welcome back, {user?.name || user?.full_name || 'Admin'}!</p>
         </div>
         <button onClick={handleLogout} className="logout-btn">
           Logout
@@ -102,9 +102,9 @@ const ManagerDashboard = () => {
           <p className="stat-number">{users.length}</p>
         </div>
         <div className="stat-card">
-          <h3>Managers</h3>
+          <h3>Admins</h3>
           <p className="stat-number">
-            {users.filter(u => u.role === 'Manager').length}
+            {users.filter(u => u.role === 'Admin').length}
           </p>
         </div>
         <div className="stat-card">
@@ -220,4 +220,4 @@ const ManagerDashboard = () => {
   );
 };
 
-export default ManagerDashboard;
+export default AdminDashboard;

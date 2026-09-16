@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "../style/Login.css";
-import Reading from "./Reading";
+
 
 function Login() {
   const [name, setName] = useState("");
@@ -38,8 +38,8 @@ function Login() {
    if (response.ok) {
         // Save user data
         localStorage.setItem('user', JSON.stringify(data.user));
-        if (data.user.role === 'Manager') {
-          window.location.href = '/Manager';
+        if (data.user.role === 'Admin') {
+          window.location.href = '/Admin';
         } else if (data.user.role === 'Teacher') {
           window.location.href = '/teacher-dashboard';
         } else if (data.user.role === 'Student') {
@@ -98,7 +98,7 @@ function Login() {
             disabled={loading}
           >
             <option value="">Select Role</option>
-            <option value="Manager">Manager</option>
+            <option value="Admin">Admin</option>
             <option value="Teacher">Teacher</option>
             <option value="Student">Student</option>
           </select>
