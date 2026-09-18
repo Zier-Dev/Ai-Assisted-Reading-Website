@@ -4,15 +4,15 @@
 
 .reading-page {
   min-height: 100vh;
-  background: #f4f6f8;
+  background: #0056b3;
   font-family: Arial, sans-serif;
 }
 
 /* Header */
 
 .reading-header {
-  background: #1f2937;
-  color: white;
+  background: white;
+  color: black;
   padding: 20px 40px;
   display: flex;
   justify-content: space-between;
@@ -26,12 +26,12 @@
 
 .reading-header p {
   margin: 5px 0 0;
-  color: #d1d5db;
+  color: black;
 }
 
 .logout-button {
-  background: white;
-  color: #1f2937;
+  background: #0056b3;
+  color: white;
   border: none;
   padding: 10px 18px;
   border-radius: 6px;
@@ -39,7 +39,7 @@
 }
 
 .logout-button:hover {
-  background: #e5e7eb;
+  background: #112d64;
 }
 
 /* Main content */
@@ -52,6 +52,7 @@
 
 .welcome {
   margin-bottom: 25px;
+  color: white;
 }
 
 .welcome h2 {
@@ -59,7 +60,7 @@
 }
 
 .welcome p {
-  color: #666;
+  color: white;
 }
 
 /* Reading card */
@@ -86,11 +87,12 @@
 .difficulty-buttons button {
   flex: 1;
   padding: 14px;
-  border: 2px solid #ddd;
-  background: white;
+  border: 2px solid black;
+  background: #0056b3;
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
+  color: white;
 }
 
 .difficulty-buttons button:hover {
@@ -98,8 +100,8 @@
 }
 
 .difficulty-buttons .selected {
-  background: #1f2937;
-  color: white;
+  background: white;
+  color: black;
   border-color: #1f2937;
 }
 
@@ -115,14 +117,14 @@
   padding: 15px;
   border: none;
   border-radius: 8px;
-  background: #1f2937;
+  background: #0056b3;
   color: white;
   font-size: 17px;
   cursor: pointer;
 }
 
 .start-button:hover {
-  background: #111827;
+  background: #112d64;
 }
 
 /* Reading */
