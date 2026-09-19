@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "react-speech-kit": "^3.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
   }
 }

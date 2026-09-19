@@ -127,7 +127,7 @@
   background: #112d64;
 }
 
-/* Reading */
+
 
 .reading-title span {
   display: inline-block;
@@ -147,7 +147,7 @@
   padding: 25px;
   background: #f9fafb;
   border-radius: 8px;
-  border-left: 4px solid #1f2937;
+  border-left: 4px solid #0056b3;
 }
 
 .paragraph p {
@@ -156,7 +156,7 @@
   color: #333;
 }
 
-/* Reading buttons */
+
 
 .reading-actions {
   display: flex;
@@ -179,13 +179,13 @@
 }
 
 .read-button {
-  background: #1f2937;
+  background: #0056b3;
   color: white;
   border: none;
 }
 
 .read-button:hover {
-  background: #111827;
+  background: #112d64;
 }
 
 /* Mobile */
@@ -215,3 +215,37 @@
     flex-direction: column;
   }
 }
+
+.clickable-word {
+  cursor: pointer;
+  color: #0056b3;
+  text-decoration: underline;
+  font-size: 30px;
+}
+
+
+.speed-button{
+  height: 30px;
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  
+}
+
+.speed-tap{
+  width: 80px;
+  background: #0056b3;
+  color: white;
+  border: solid, 2px, black;
+  border-radius: 6px;
+}
+
+.speed-tap:hover{
+  background: #112d64;
+}
+
+.speed-button span{
+  font-size: 20px;
+}
+
+
