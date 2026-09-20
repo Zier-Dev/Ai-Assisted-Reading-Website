@@ -2,7 +2,7 @@ import { useState } from "react";
 import "../style/Login.css";
 
 
-function Login() {
+function Login({ onLogin, onGoToRegister }) {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
@@ -36,7 +36,6 @@ function Login() {
       const data = await response.json();
 
    if (response.ok) {
-        // Save user data
         localStorage.setItem('user', JSON.stringify(data.user));
         if (data.user.role === 'Admin') {
           window.location.href = '/Admin';
@@ -102,6 +101,18 @@ function Login() {
             <option value="Teacher">Teacher</option>
             <option value="Student">Student</option>
           </select>
+
+                      <p className="register-link">
+                Don't have an account?{' '}
+                <a href="#" 
+          onClick={(e) => {
+            e.preventDefault();
+            onGoToRegister(); // 2. Call the prop function here!
+          }}
+                >
+                  Register here
+                </a>
+              </p>
 
           <button type="submit" className="login-button" disabled={loading}>
             {loading ? "Logging in..." : "Login"}

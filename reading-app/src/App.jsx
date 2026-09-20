@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import Login from './pages/Login';
 import AdminDashboard from './pages/Admin';
 import Reading from './pages/Reading';
+import Register from './pages/Register';
 import './App.css';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('login');
   const [user, setUser] = useState(null);
 
-  // Check if a user is already logged in
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
 
@@ -31,6 +32,8 @@ function App() {
     }
   }, []);
 
+
+
   // Login function
   const handleLogin = (userData) => {
     setUser(userData);
@@ -47,33 +50,32 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-
     setUser(null);
     setCurrentPage('login');
   };
 
-  // Login page
-  if (currentPage === 'login') {
-    return <Login onLogin={handleLogin} />;
+ // 1. Check Register First
+  if (currentPage === 'register') {
+    return <Register onBackToLogin={() => setCurrentPage('login')} />;
   }
 
-  
+  // 2. Check Admin
   if (currentPage === 'admin') {
-    return (
-      <AdminDashboard
-        user={user}
-        onLogout={handleLogout}
-      />
-    );
+    return <AdminDashboard user={user} onLogout={handleLogout} />;
   }
 
-  // Student Reading page
+  // 3. Check Reading
   if (currentPage === 'reading') {
-    return <Reading />;
+    return <Reading user={user} onLogout={handleLogout} />;
   }
 
-  // Default
-  return <Login onLogin={handleLogin} />;
+  // 4. Default: Render Login AND pass onGoToRegister
+  return (
+    <Login 
+      onLogin={handleLogin} 
+      onGoToRegister={() => setCurrentPage('register')} 
+    />
+  );
 }
 
 export default App;
