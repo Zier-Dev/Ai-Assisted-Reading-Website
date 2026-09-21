@@ -1,0 +1,10 @@
+.register-box {
+  width: 350px;
+  height: 500px;
+  padding: 30px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background-color: #fff;
+  margin: 0 auto;
+  margin-top: 50px;
+}
