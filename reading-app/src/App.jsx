@@ -56,7 +56,7 @@ function App() {
 
  // 1. Check Register First
   if (currentPage === 'register') {
-    return <Register onBackToLogin={() => setCurrentPage('login')} />;
+    return <Register onGoToLogin={() => setCurrentPage('login')} />;
   }
 
   // 2. Check Admin

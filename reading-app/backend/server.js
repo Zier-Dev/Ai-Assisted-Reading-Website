@@ -86,4 +86,12 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
+app.post('/api/register', (req, res) => {
+  const { user, full_name, password, role } = req.body;
+
+  if (!user || !full_name || !password || !role) {
+    return res.status(400).json({ error: "Missing required fields." });
+  }
+});
+
 
