@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const pool = require('./db/pool');
 require('dotenv').config();
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -86,11 +87,52 @@ app.delete('/api/users/:id', async (req, res) => {
   }
 });
 
-app.post('/api/register', (req, res) => {
-  const { user, full_name, password, role } = req.body;
+app.post('/api/register', async (req, res) => {
+  try {
+    const { user, full_name, password, role } = req.body;
 
-  if (!user || !full_name || !password || !role) {
-    return res.status(400).json({ error: "Missing required fields." });
+    // 1. Validate required fields
+    if (!user || !full_name || !password || !role) {
+      return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    // 2. Check if username already exists
+    const existingUser = users.find((u) => u.user.toLowerCase() === user.toLowerCase());
+    if (existingUser) {
+      return res.status(400).json({ error: "Username is already taken." });
+    }
+
+    // 3. Hash the password before saving
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // 4. Save new user object
+    const newUser = {
+      id: users.length + 1,
+      user,
+      full_name,
+      password: hashedPassword,
+      role,
+      createdAt: new Date(),
+    };
+
+    users.push(newUser);
+
+    console.log("Registered Users:", users); // Logged to terminal for verification
+
+    // 5. Send success response
+    return res.status(201).json({
+      message: "User registered successfully!",
+      user: {
+        id: newUser.id,
+        user: newUser.user,
+        full_name: newUser.full_name,
+        role: newUser.role,
+      },
+    });
+  } catch (error) {
+    console.error("Registration Error:", error);
+    return res.status(500).json({ error: "Internal server error." });
   }
 });
 
