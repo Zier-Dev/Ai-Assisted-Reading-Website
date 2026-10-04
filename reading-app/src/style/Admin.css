@@ -85,13 +85,13 @@ html, body, #root {
 
 .section-header {
   display: flex;
-  justify-content: space-between;
+
   align-items: center;
   margin-bottom: 20px;
 }
 
 .section-header h2 {
-  margin: 0;
+  margin-left: 0;
   color: #333;
 }
 
@@ -102,7 +102,25 @@ html, body, #root {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  margin-left: 15px;
+
 }
+
+.adduser-btn {
+  padding: 8px 16px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: auto;
+  
+}
+
+.adduser-btn:hover {
+  background: #0056b3;
+}
+
 
 .refresh-btn:hover {
   background: #0056b3;

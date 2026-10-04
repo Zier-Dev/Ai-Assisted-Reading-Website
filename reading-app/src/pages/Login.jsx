@@ -2,7 +2,7 @@ import { useState } from "react";
 import "../style/Login.css";
 
 
-function Login({ onLogin, onGoToRegister }) {
+function Login({ onGoToRegister }) {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
@@ -71,10 +71,10 @@ function Login({ onLogin, onGoToRegister }) {
 
         <form onSubmit={handleLogin}>
 
-          <label className="word">Name</label>
+          <label className="word">Username</label>
           <input
             type="text"
-            placeholder="Enter name"
+            placeholder="Enter your username"
             value={name}
             onChange={(event) => setName(event.target.value)}
             disabled={loading}

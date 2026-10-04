@@ -48,10 +48,17 @@ function App() {
 
   // Logout function
   const handleLogout = () => {
+    const confirmLogout = window.confirm(
+    'Are you sure you want to logout?'
+  );
+
+    if (confirmLogout) {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     setUser(null);
     setCurrentPage('login');
+    }
+   
   };
 
  // 1. Check Register First
