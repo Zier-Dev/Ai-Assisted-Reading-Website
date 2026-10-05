@@ -100,7 +100,7 @@ function Login({ onGoToRegister }) {
             <option value="Admin">Admin</option>
             <option value="Teacher">Teacher</option>
             <option value="Student">Student</option>
-          </select>
+          </select> 
 
                       <p className="register-link">
                 Don't have an account?{' '}

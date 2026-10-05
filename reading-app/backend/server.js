@@ -5,7 +5,6 @@ const bcrypt = require('bcryptjs');
 
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const pool = require('./db/pool');
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -17,6 +16,7 @@ app.use((req, res, next) => {
 });
 
 
+app.use(cors());
 app.use(express.json());
 
 // GET ALL USERS

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import "../style/Admin.css";
 
 function ModalView({ isOpen, onClose, children }) {
@@ -17,18 +17,18 @@ const AdminDashboard = ({ onLogout }) => {
   const [name, setName] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
-  const [role] = useState("Student");
+   const [role, setRole] = useState("");
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [registerLoading, setRegisterLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
     fetchUsers();
@@ -37,137 +37,161 @@ const AdminDashboard = ({ onLogout }) => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/users');
+      setError("");
+
+      const response = await fetch("http://localhost:5000/api/users");
+
       const data = await response.json();
       setUsers(data);
-      setError('');
-    } catch (err) {
-      console.error('Error fetching users:', err);
-      setError('Failed to load users');
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setError(error.message || "Failed to load users");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleViewUser = (user) => {
-    setSelectedUser(user);
+  
+  const handleViewUser = (selectedUser) => {
+    setSelectedUser(selectedUser);
     setIsOpen(true);
   };
 
   const handleDeleteUser = async (userId) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this user?');
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this user?",
+    );
+
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${userId}`, {
-        method: 'DELETE'
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/users/${userId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       const data = await response.json();
 
-      if (response.ok) {
-        setIsOpen(false);
-        fetchUsers();
-        alert('User deleted successfully!');
-      } else {
-        alert(data.error || 'Failed to delete user');
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete user");
       }
+
+      setIsOpen(false);
+      setSelectedUser(null);
+
+      await fetchUsers();
+
+      alert("User deleted successfully!");
     } catch (error) {
-      console.error('Delete error:', error);
-      alert('Cannot connect to server');
+      console.error("Delete error:", error);
+      alert(error.message || "Cannot connect to server");
     }
   };
 
   const handleRegister = async (event) => {
     event.preventDefault();
-    setError('');
+
+    setError("");
+
+    // Check empty fields
+    if (!name.trim() || !fullName.trim() || !password.trim() || !role.trim()) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
     setRegisterLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/register', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          user: name,
-          full_name: fullName,
+          user: name.trim(),
+          full_name: fullName.trim(),
           password: password,
-          role: role
-        })
+          role: role,
+        }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        alert('User registered successfully!');
-
-        setName('');
-        setFullName('');
-        setPassword('');
-
-        setIsAddOpen(false);
-        fetchUsers();
-      } else {
-        setError(data.error || 'Registration failed');
+      if (!response.ok) {
+        throw new Error(data.error || "Registration failed");
       }
+      alert("User registered successfully!");
+      setName("");
+      setFullName("");
+      setPassword("");
+      setError("");
+
+      setIsAddOpen(false);
+
+      await fetchUsers();
     } catch (error) {
-      console.error('Register error:', error);
-      setError('Cannot connect to server');
+      console.error("Register error:", error);
+      setError(error.message || "Cannot connect to server");
     } finally {
       setRegisterLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    const confirmLogout = window.confirm('Are you sure you want to logout?');
-
-    if (confirmLogout) {
-      onLogout();
-    }
+  const handleCloseAddUser = () => {
+    if (registerLoading) return;
+    setIsAddOpen(false);
+    setName("");
+    setFullName("");
+    setPassword("");
+    setRole("");
+    setError("");
   };
-
   return (
     <div className="admin-dashboard">
+      {/* ================= HEADER ================= */}
       <div className="dashboard-header">
         <div className="header-left">
           <h1>Admin Dashboard</h1>
-          <p>Welcome back, {user?.name || user?.full_name || 'Admin'}!</p>
-        </div>
 
-        <button onClick={handleLogout} className="logout-btn">
+          <p>Welcome back, {user?.name || user?.full_name || "Admin"}!</p>
+        </div>
+        <button onClick={onLogout} className="logout-btn">
           Logout
         </button>
       </div>
-
+      {/* ================= STATISTICS ================= */}
       <div className="stats-grid">
         <div className="stat-card">
           <h3>Total Users</h3>
           <p className="stat-number">{users.length}</p>
         </div>
-
         <div className="stat-card">
           <h3>Admins</h3>
           <p className="stat-number">
-            {users.filter(u => u.role === 'Admin').length}
+            {users.filter((user) => user.role === "Admin").length}
           </p>
         </div>
 
         <div className="stat-card">
           <h3>Teachers</h3>
+
           <p className="stat-number">
-            {users.filter(u => u.role === 'Teacher').length}
+            {users.filter((user) => user.role === "Teacher").length}
           </p>
         </div>
 
         <div className="stat-card">
           <h3>Students</h3>
+
           <p className="stat-number">
-            {users.filter(u => u.role === 'Student').length}
+            {users.filter((user) => user.role === "Student").length}
           </p>
         </div>
       </div>
 
+      {/* ================= USERS ================= */}
       <div className="users-section">
         <div className="section-header">
           <h2>All Users</h2>
@@ -176,22 +200,24 @@ const AdminDashboard = ({ onLogout }) => {
             <button
               className="adduser-btn"
               onClick={() => {
-                setError('');
+                setError("");
                 setIsAddOpen(true);
               }}
-            >
-              Add User
+            > Add User
             </button>
-
-            <button onClick={fetchUsers} className="refresh-btn">
-              Refresh
+            <button
+              onClick={fetchUsers}
+              className="refresh-btn"
+              disabled={loading}
+            >
+              {loading ? "Loading..." : "Refresh"}
             </button>
           </div>
         </div>
-
+        {/* ================= USER TABLE ================= */}
         {loading ? (
           <div className="loading">Loading users...</div>
-        ) : error ? (
+        ) : error && users.length === 0 ? (
           <div className="error-message">{error}</div>
         ) : (
           <div className="table-container">
@@ -205,7 +231,6 @@ const AdminDashboard = ({ onLogout }) => {
                   <th>Actions</th>
                 </tr>
               </thead>
-
               <tbody>
                 {users.length === 0 ? (
                   <tr>
@@ -237,10 +262,9 @@ const AdminDashboard = ({ onLogout }) => {
         )}
       </div>
 
-      <ModalView
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-      >
+      {/* ================= VIEW USER MODAL ================= */}
+
+      <ModalView isOpen={isOpen} onClose={() => setIsOpen(false)}>
         {selectedUser && (
           <div className="modal-view">
             <h2>User Details</h2>
@@ -258,7 +282,7 @@ const AdminDashboard = ({ onLogout }) => {
               <tbody>
                 <tr>
                   <td>{selectedUser.user_id || selectedUser.id}</td>
-                  <td>{selectedUser.user || selectedUser.email}</td>
+                  <td>{selectedUser.user || selectedUser.username}</td>
                   <td>{selectedUser.full_name || selectedUser.name}</td>
                   <td>{selectedUser.role}</td>
                 </tr>
@@ -268,36 +292,26 @@ const AdminDashboard = ({ onLogout }) => {
             <button
               className="delete-btn"
               onClick={() =>
-                handleDeleteUser(
-                  selectedUser.user_id || selectedUser.id
-                )
+                handleDeleteUser(selectedUser.user_id || selectedUser.id)
               }
             >
               Delete User
             </button>
 
-            <button
-              className="close-btn"
-              onClick={() => setIsOpen(false)}
-            >
+            <button className="close-btn" onClick={() => setIsOpen(false)}>
               Close
             </button>
           </div>
         )}
       </ModalView>
 
-      <ModalView
-        isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
-      >
+      {/* ================= ADD USER MODAL ================= */}
+
+      <ModalView isOpen={isAddOpen} onClose={handleCloseAddUser}>
         <div className="register-box">
           <h2>Add User</h2>
 
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
+          {error && <div className="error-message">{error}</div>}
 
           <form onSubmit={handleRegister}>
             <label>
@@ -333,7 +347,17 @@ const AdminDashboard = ({ onLogout }) => {
               />
             </label>
 
-            <p>Role: {role}</p>
+            <label className="word">Roles</label>
+          <select 
+            className="role" 
+            value={role} 
+            onChange={(event) => setRole(event.target.value)}
+            disabled={loading}
+          >
+            <option value="">Select Role</option>
+            <option value="Teacher">Teacher</option>
+            <option value="Student">Student</option>
+          </select> 
 
             <button
               className="submit_btn"
