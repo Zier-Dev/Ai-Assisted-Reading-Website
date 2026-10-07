@@ -8,11 +8,11 @@ function Reading() {
   const [speed, setSpeed] = useState(0.9);
   const [speaking, setSpeaking] = useState(false);
   const [activeWord, setActiveWord] = useState(null);
+  const [paragraph, setParagraph] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user"));
-
-  const paragraph = `The little boy walked to the garden early in the morning. He saw many colorful flowers near the trees. A small bird was sitting on a branch and singing. The boy smiled and enjoyed the quiet morning.`;
-
   const words = paragraph.split(" ");
 
 
@@ -55,9 +55,40 @@ function Reading() {
     window.speechSynthesis.speak(utterance);
   };
 
-  function startReading() {
+ async function startReading() {
+  setLoading(true);
+  setError("");
+
+  try {
+    const response = await fetch(
+      "http://localhost:5000/api/generate-reading",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          difficulty: difficulty
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to generate passage.");
+    }
+
+    setParagraph(data.paragraph);
     setStarted(true);
+
+  } catch (error) {
+    console.error("Generation error:", error);
+    setError(error.message || "Cannot generate reading passage.");
+  } finally {
+    setLoading(false);
   }
+}
 
   function logout() {
     const confirmLogout = window.confirm("Are you sure you want to logout?");
@@ -109,15 +140,15 @@ function Reading() {
               Selected: <strong>{difficulty}</strong>
             </p>
 
-            <button className="start-button" onClick={startReading}>
-              Start Reading
+            <button className="start-button" onClick={startReading} disabled={loading}>
+              Start Reading  {loading ? "Generating..." : "Start Reading"}
             </button>
           </div>
         ) : (
           <div className="reading-card">
             <div className="reading-title">
               <span>{difficulty}</span>
-              <h2>Morning in the Garden</h2>
+              <h2>Reading Passage</h2>
             </div>
 
            
@@ -173,10 +204,11 @@ function Reading() {
                   ⏹ Stop
                 </button>
               ) : (
-                <button className="read-button" onClick={speakAll}>
+          <button className="read-button" onClick={speakAll}>
                   🎤 Start Reading
                 </button>
               )}
+              {error && <p className="error-message">{error}</p>}
             </div>
           </div>
         )}
