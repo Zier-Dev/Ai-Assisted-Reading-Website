@@ -1,6 +1,6 @@
+
 import { useState, useEffect } from "react";
 import "../style/Reading.css";
-
 
 function Reading() {
   const [difficulty, setDifficulty] = useState("Easy");
@@ -13,8 +13,7 @@ function Reading() {
   const [error, setError] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user"));
-  const words = paragraph.split(" ");
-
+  const words = paragraph.split(/\s+/).filter(Boolean);
 
   useEffect(() => {
     return () => {
@@ -22,27 +21,29 @@ function Reading() {
     };
   }, []);
 
-  
   const stopSpeech = () => {
     window.speechSynthesis.cancel();
     setSpeaking(false);
     setActiveWord(null);
   };
 
-  
   const speakAll = () => {
+    if (!paragraph) return;
+
     stopSpeech();
+
     const utterance = new SpeechSynthesisUtterance(paragraph);
     utterance.rate = speed;
+
     utterance.onstart = () => setSpeaking(true);
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
+
     window.speechSynthesis.speak(utterance);
   };
 
-
   const handleWordClick = (word, index) => {
-    const clean = word.replace(/[^\w]/g, "");
+    const clean = word.replace(/[^\w'-]/g, "");
     if (!clean) return;
 
     stopSpeech();
@@ -50,48 +51,56 @@ function Reading() {
 
     const utterance = new SpeechSynthesisUtterance(clean);
     utterance.rate = speed;
+
     utterance.onend = () => setActiveWord(null);
     utterance.onerror = () => setActiveWord(null);
+
     window.speechSynthesis.speak(utterance);
   };
 
- async function startReading() {
-  setLoading(true);
-  setError("");
+  async function startReading() {
+    setLoading(true);
+    setError("");
 
-  try {
-    const response = await fetch(
-      "http://localhost:5000/api/generate-reading",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          difficulty: difficulty
-        })
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/generate-reading",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ difficulty })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Failed to generate passage."
+        );
       }
-    );
 
-    const data = await response.json();
+      if (!data.paragraph || !data.paragraph.trim()) {
+        throw new Error("The AI returned an empty passage. Try again.");
+      }
 
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to generate passage.");
+      setParagraph(data.paragraph.trim());
+      setStarted(true);
+    } catch (err) {
+      console.error("Generation error:", err);
+      setError(err.message || "Cannot generate reading passage.");
+    } finally {
+      setLoading(false);
     }
-
-    setParagraph(data.paragraph);
-    setStarted(true);
-
-  } catch (error) {
-    console.error("Generation error:", error);
-    setError(error.message || "Cannot generate reading passage.");
-  } finally {
-    setLoading(false);
   }
-}
 
   function logout() {
-    const confirmLogout = window.confirm("Are you sure you want to logout?");
+    const confirmLogout = window.confirm(
+      "Are you sure you want to logout?"
+    );
+
     if (confirmLogout) {
       stopSpeech();
       localStorage.removeItem("user");
@@ -106,6 +115,7 @@ function Reading() {
           <h1>Reading System</h1>
           <p>Medroso-Mendoza National High School</p>
         </div>
+
         <button className="logout-button" onClick={logout}>
           Logout
         </button>
@@ -113,7 +123,9 @@ function Reading() {
 
       <main className="reading-content">
         <div className="welcome">
-          <h2>Welcome, {user?.first_name || user?.name || "Student"}!</h2>
+          <h2>
+            Welcome, {user?.first_name || user?.name || "Student"}!
+          </h2>
           <p>Practice your reading by choosing a difficulty level.</p>
         </div>
 
@@ -122,26 +134,32 @@ function Reading() {
             <h2>Choose Difficulty</h2>
 
             <div className="difficulty-buttons">
-              <button
-                className={difficulty === "Easy" ? "selected" : ""}
-                onClick={() => setDifficulty("Easy")}
-              >Easy</button>
-              <button
-                className={difficulty === "Medium" ? "selected" : ""}
-                onClick={() => setDifficulty("Medium")}
-              >Medium</button>
-              <button
-                className={difficulty === "Hard" ? "selected" : ""}
-                onClick={() => setDifficulty("Hard")}
-              >Hard</button>
+              {["Easy", "Medium", "Hard"].map((level) => (
+                <button
+                  key={level}
+                  className={difficulty === level ? "selected" : ""}
+                  onClick={() => setDifficulty(level)}
+                  disabled={loading}
+                >
+                  {level}
+                </button>
+              ))}
             </div>
 
             <p className="selected-difficulty">
               Selected: <strong>{difficulty}</strong>
             </p>
 
-            <button className="start-button" onClick={startReading} disabled={loading}>
-              Start Reading  {loading ? "Generating..." : "Start Reading"}
+            {error && (
+              <p className="error-message">{error}</p>
+            )}
+
+            <button
+              className="start-button"
+              onClick={startReading}
+              disabled={loading}
+            >
+              {loading ? "Generating..." : "Start Reading"}
             </button>
           </div>
         ) : (
@@ -151,36 +169,38 @@ function Reading() {
               <h2>Reading Passage</h2>
             </div>
 
-           
-                    <div className="speed-button">
-            <span>Speed:</span>
-            <button
-              className={`speed-tap ${speed === 0.6 ? "active" : ""}`}
-              onClick={() => setSpeed(0.6)}
-            >
-              Slow
-            </button>
+            <div className="speed-button">
+              <span>Speed:</span>
 
-            <button
-              className={`speed-tap ${speed === 1.0 ? "active" : ""}`}
-              onClick={() => setSpeed(1.0)}
-            >
-              Normal
-            </button>
+              <button
+                className={`speed-tap ${speed === 0.6 ? "active" : ""}`}
+                onClick={() => setSpeed(0.6)}
+              >
+                Slow
+              </button>
 
-            <button
-              className={`speed-tap ${speed === 1.5 ? "active" : ""}`}
-              onClick={() => setSpeed(1.5)}
-            >
-              Fast
-            </button>
-          </div>
+              <button
+                className={`speed-tap ${speed === 1.0 ? "active" : ""}`}
+                onClick={() => setSpeed(1.0)}
+              >
+                Normal
+              </button>
+
+              <button
+                className={`speed-tap ${speed === 1.5 ? "active" : ""}`}
+                onClick={() => setSpeed(1.5)}
+              >
+                Fast
+              </button>
+            </div>
 
             <div className="paragraph">
               {words.map((word, index) => (
                 <span
                   key={index}
-                  className={`clickable-word ${activeWord === index ? "active" : ""}`}
+                  className={`clickable-word ${
+                    activeWord === index ? "active" : ""
+                  }`}
                   onClick={() => handleWordClick(word, index)}
                 >
                   {word}{" "}
@@ -188,11 +208,16 @@ function Reading() {
               ))}
             </div>
 
+            {error && (
+              <p className="error-message">{error}</p>
+            )}
+
             <div className="reading-actions">
               <button
                 className="back-button"
                 onClick={() => {
                   stopSpeech();
+                  setError("");
                   setStarted(false);
                 }}
               >
@@ -204,11 +229,18 @@ function Reading() {
                   ⏹ Stop
                 </button>
               ) : (
-          <button className="read-button" onClick={speakAll}>
-                  🎤 Start Reading
+                <button className="read-button" onClick={speakAll}>
+                  🔊 Listen
                 </button>
               )}
-              {error && <p className="error-message">{error}</p>}
+
+              <button
+                className="start-button"
+                onClick={startReading}
+                disabled={loading}
+              >
+                {loading ? "Generating..." : "New Passage"}
+              </button>
             </div>
           </div>
         )}
