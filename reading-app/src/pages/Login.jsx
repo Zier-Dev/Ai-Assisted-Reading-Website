@@ -36,11 +36,11 @@ function Login({ onGoToRegister }) {
       const data = await response.json();
 
    if (response.ok) {
-        localStorage.setItem('user', JSON.stringify(data.user));
+        sessionStorage.setItem('user', JSON.stringify(data.user));
         if (data.user.role === 'Admin') {
           window.location.href = '/Admin';
         } else if (data.user.role === 'Teacher') {
-          window.location.href = '/teacher-dashboard';
+          window.location.href = '/Teacher';
         } else if (data.user.role === 'Student') {
           window.location.href = '/Reading';
         } 

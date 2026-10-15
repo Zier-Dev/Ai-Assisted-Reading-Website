@@ -12,7 +12,7 @@ function Reading() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(sessionStorage.getItem("user"));
   const words = paragraph.split(/\s+/).filter(Boolean);
 
   useEffect(() => {
@@ -103,7 +103,7 @@ function Reading() {
 
     if (confirmLogout) {
       stopSpeech();
-      localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
       window.location.href = "/";
     }
   }

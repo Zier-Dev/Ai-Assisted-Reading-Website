@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import AdminDashboard from './pages/Admin';
 import Reading from './pages/Reading';
 import Register from './pages/Register';
+import Teacher from "./pages/Teacher";
 import './App.css';
 
 function App() {
@@ -10,8 +11,10 @@ function App() {
   const [user, setUser] = useState(null);
 
 
+  
+
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
+    const storedUser = sessionStorage.getItem('user');
 
     if (storedUser) {
       try {
@@ -24,10 +27,12 @@ function App() {
           setCurrentPage('admin');
         } else if (userData.role === 'Student') {
           setCurrentPage('reading');
+        } else if (userData.role === 'Teacher') {
+          setCurrentPage('teacher');
         }
 
       } catch (e) {
-        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
       }
     }
   }, []);
@@ -53,8 +58,8 @@ function App() {
   );
 
     if (confirmLogout) {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('token');
     setUser(null);
     setCurrentPage('login');
     }
@@ -76,6 +81,10 @@ function App() {
     return <Reading user={user} onLogout={handleLogout} />;
   }
 
+  if (currentPage === "teacher") {
+  return <Teacher user={user} onLogout={handleLogout} />;
+}
+
   // 4. Default: Render Login AND pass onGoToRegister
   return (
     <Login 
@@ -84,5 +93,6 @@ function App() {
     />
   );
 }
+
 
 export default App;
