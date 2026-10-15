@@ -180,7 +180,7 @@ Rules:
 - Return only the passage.
 `;
 
-   const response = await groq.chat.completions.create({
+const response = await groq.chat.completions.create({
   model: "openai/gpt-oss-120b",
   messages: [
     {
@@ -188,20 +188,34 @@ Rules:
       content: prompt
     }
   ],
-  temperature: 0.7,
-  max_tokens: 300
+  reasoning_effort: "low",
+  max_completion_tokens: 1000,
+  temperature: 0.7
 });
 
 console.log("Groq response:", JSON.stringify(response, null, 2));
 
-const paragraph = response.choices?.[0]?.message?.content?.trim();
+const message = response.choices?.[0]?.message;
+
+const paragraph = (
+  typeof message?.content === "string"
+    ? message.content
+    : ""
+).trim();
 
 if (!paragraph) {
-  console.error("Finish reason:", response.choices?.[0]?.finish_reason);
-  console.error("Message:", response.choices?.[0]?.message);
+  console.error("Groq returned no passage:", message);
 
-  throw new Error("Groq returned no passage. Check the backend terminal.");
+  return res.status(500).json({
+    error: "The AI returned an empty passage. Please try again."
+  });
 }
+
+return res.json({
+  success: true,
+  difficulty,
+  paragraph
+});
 
 
   } catch (error) {
