@@ -107,7 +107,7 @@ function Login({ onGoToRegister }) {
                 <a href="#" 
           onClick={(e) => {
             e.preventDefault();
-            onGoToRegister(); // 2. Call the prop function here!
+            onGoToRegister(); 
           }}
                 >
                   Register here

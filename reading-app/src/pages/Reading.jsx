@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import "../style/Reading.css";
 
-function Reading() {
+function Reading({onLogout}) {
   const API_URL = (
     import.meta.env.VITE_API_URL || "http://localhost:5000"
   ).replace(/\/$/, "");
@@ -151,46 +151,84 @@ function Reading() {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Generate a reading passage
-  async function startReading() {
-    setLoading(true);
-    setError("");
 
+async function startReading() {
+  setLoading(true);
+  setError("");
+
+  try {
+    // STEP 1: Generate the passage
+    const response = await fetch(`${API_URL}/api/generate-reading`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ difficulty }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to generate passage.");
+    }
+
+    if (!data.paragraph || !data.paragraph.trim()) {
+      throw new Error("The AI returned an empty passage. Try again.");
+    }
+
+
+    setParagraph(data.paragraph.trim());
+    setStarted(true);
+
+  
+    if (!userId || user?.role !== "Student") {
+      setError(
+        "Passage generated, but your student account ID is missing. Please log in again."
+      );
+      return;
+    }
+
+  
     try {
-      const response = await fetch(
-        `${API_URL}/api/generate-reading`,
+      const saveResponse = await fetch(
+        `${API_URL}/api/reading-attempts`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ difficulty }),
+          body: JSON.stringify({
+            student_id: userId,
+            difficulty: difficulty,
+          }),
         }
       );
 
-      const data = await response.json();
+      const saveData = await saveResponse.json();
 
-      if (!response.ok) {
+      if (!saveResponse.ok) {
         throw new Error(
-          data.error || "Failed to generate passage."
+          saveData.message ||
+            saveData.error ||
+            "Failed to save reading attempt."
         );
       }
 
-      if (!data.paragraph || !data.paragraph.trim()) {
-        throw new Error(
-          "The AI returned an empty passage. Try again."
-        );
-      }
+      console.log("Reading attempt saved:", saveData.attempt);
+    } catch (saveError) {
+      console.error("Saving attempt error:", saveError);
 
-      setParagraph(data.paragraph.trim());
-      setStarted(true);
-    } catch (err) {
-      console.error("Generation error:", err);
-      setError(err.message || "Cannot generate reading passage.");
-    } finally {
-      setLoading(false);
+      setError(
+        `Passage generated, but the attempt was not saved: ${saveError.message}`
+      );
     }
+  } catch (err) {
+    console.error("Generation error:", err);
+    setError(err.message || "Cannot generate reading passage.");
+  } finally {
+    setLoading(false);
   }
+}
 
   // Save the student's selected teacher
   const handleTeacherSelection = async () => {
@@ -242,17 +280,7 @@ function Reading() {
     }
   };
 
-  function logout() {
-    const confirmLogout = window.confirm(
-      "Are you sure you want to logout?"
-    );
-
-    if (confirmLogout) {
-      stopSpeech();
-      sessionStorage.removeItem("user");
-      window.location.href = "/";
-    }
-  }
+  
 
   return (
     <div className="reading-page">
@@ -262,7 +290,7 @@ function Reading() {
           <p>Medroso-Mendoza National High School</p>
         </div>
 
-        <button className="logout-button" onClick={logout}>
+        <button className="logout-button" onClick={onLogout}>
           Logout
         </button>
       </header>

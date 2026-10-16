@@ -182,6 +182,20 @@
   white-space: nowrap;
 }
 
+.teacher-remove-button{
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.teacher-remove-button:hover {
+  background: #e7162b;
+}
+
 .teacher-back-button {
   background: white;
   border: 1px solid #ccc;

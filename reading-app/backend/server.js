@@ -314,6 +314,7 @@ Rules:
 - Medium: moderately longer sentences and varied vocabulary.
 - Hard: longer sentences and more advanced vocabulary, but still understandable.
 - Return only the passage.
+- Dont add any dashes like this - everytime you generate a passage. Just return the passage without any extra formatting or symbols.
 `;
 
     const response = await groq.chat.completions.create({
@@ -354,6 +355,156 @@ Rules:
     });
   }
 });
+
+// GET A TEACHER'S ASSIGNED STUDENTS AND READING HISTORY
+app.get("/api/teachers/:id/students", async (req, res) => {
+  try {
+    const teacherId = Number(req.params.id);
+
+    if (!Number.isInteger(teacherId) || teacherId <= 0) {
+      return res.status(400).json({
+        message: "Invalid teacher ID.",
+      });
+    }
+
+    const result = await pool.query(
+      `SELECT
+          u.user_id,
+          u.full_name,
+          COALESCE(
+            (
+              SELECT json_agg(
+                json_build_object(
+                  'id', ra.attempt_id,
+                  'date', TO_CHAR(ra.created_at, 'YYYY-MM-DD'),
+                  'time', TO_CHAR(ra.created_at, 'HH12:MI AM'),
+                  'difficulty', ra.difficulty,
+                  'status', 'Completed'
+                )
+                ORDER BY ra.created_at DESC
+              )
+              FROM reading_attempts ra
+              WHERE ra.student_id = u.user_id
+            ),
+            '[]'::json
+          ) AS history
+       FROM users u
+       WHERE u.role = $1
+         AND u.teacher_id = $2
+       ORDER BY u.full_name`,
+      ["Student", teacherId]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Fetch assigned students error:", error);
+
+    res.status(500).json({
+      message: "Failed to fetch assigned students.",
+    });
+  }
+});
+
+// SAVE A READING ATTEMPT
+app.post("/api/reading-attempts", async (req, res) => {
+  try {
+    const { student_id, difficulty } = req.body;
+
+    const studentId = Number(student_id);
+
+    if (
+      !Number.isInteger(studentId) ||
+      studentId <= 0 ||
+      !["Easy", "Medium", "Hard"].includes(difficulty)
+    ) {
+      return res.status(400).json({
+        message: "Invalid student ID or difficulty.",
+      });
+    }
+
+    const student = await pool.query(
+      `SELECT user_id
+       FROM users
+       WHERE user_id = $1
+         AND role = $2`,
+      [studentId, "Student"]
+    );
+
+    if (student.rows.length === 0) {
+      return res.status(404).json({
+        message: "Student not found.",
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO reading_attempts (student_id, difficulty)
+       VALUES ($1, $2)
+       RETURNING attempt_id, student_id, difficulty, created_at`,
+      [studentId, difficulty]
+    );
+
+    res.status(201).json({
+      message: "Reading attempt saved successfully.",
+      attempt: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Save reading attempt error:", error);
+
+    res.status(500).json({
+      message: "Failed to save reading attempt.",
+    });
+  }
+});
+
+
+// REMOVE A STUDENT FROM A TEACHER
+app.delete(
+  "/api/teachers/:teacherId/students/:studentId",
+  async (req, res) => {
+    try {
+      const teacherId = Number(req.params.teacherId);
+      const studentId = Number(req.params.studentId);
+
+      if (
+        !Number.isInteger(teacherId) ||
+        teacherId <= 0 ||
+        !Number.isInteger(studentId) ||
+        studentId <= 0
+      ) {
+        return res.status(400).json({
+          message: "Invalid teacher ID or student ID.",
+        });
+      }
+
+      const result = await pool.query(
+        `UPDATE users
+         SET teacher_id = NULL
+         WHERE user_id = $1
+           AND teacher_id = $2
+           AND role = $3
+         RETURNING user_id, full_name`,
+        [studentId, teacherId, "Student"]
+      );
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({
+          message: "Student not found or not assigned to this teacher.",
+        });
+      }
+
+      res.json({
+        message: "Student successfully unassigned.",
+        student: result.rows[0],
+      });
+    } catch (error) {
+      console.error("Remove student error:", error);
+
+      res.status(500).json({
+        message: "Failed to remove student.",
+      });
+    }
+  }
+);
 
 // START SERVER — KEEP THIS AT THE BOTTOM
 app.listen(PORT, () => {
