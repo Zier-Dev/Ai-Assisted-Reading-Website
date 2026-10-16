@@ -1,22 +1,45 @@
+
 .login-container {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #0D47A1;
-  flex-direction: column;
+  flex-direction: row;
+  gap: 5rem;
+  padding: 40px;
+  box-sizing: border-box;
+
+  
+   background:
+        linear-gradient(
+            rgba(10, 65, 145, 0.55),
+            rgba(10, 65, 145, 0.65)
+        ),
+        url("/src/assets/School_background.png");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 
 .login-box {
-  width: 350px;
-  padding: 30px;
+  width: 450px;
+  padding: 50px;
   border: 1px solid #ddd;
   border-radius: 20px;
   background-color: #fff;
 }
 
-.login-box h1 {
-  text-align: center;
+login-word{
+  color: #0D47A1;
+  font-size: 30px;
+}
+
+.login-subtitle{
+  color: #0D47A1;
+  font-size: 18px;
+  margin-bottom: 20px;
 }
 
 .login-box label {
@@ -55,26 +78,55 @@
   background-color: #3948d1;
 }
 
+.school-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+/* School logo */
+.school-logo {
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+/* School name */
 .school-title {
   color: white;
   font-size: 2.5rem;
   font-weight: 700;
   margin: 0;
   line-height: 1.2;
+  max-width: 650px;
 }
 
-.school-header {
-  text-align: center;
-  margin-bottom: 3rem; 
-}
-
-
-.school-title .subtitle {
+/* Reading System subtitle */
+.school-header .subtitle {
   display: block;
   font-size: 1.5rem;
   font-weight: 300;
   color: rgba(255, 255, 255, 0.9);
-  margin-top: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+/* Responsive sizing */
+@media (max-width: 768px) {
+  .school-logo {
+    width: 95px;
+    height: 95px;
+  }
+
+  .school-title {
+    font-size: 1.8rem;
+  }
+
+  .school-header .subtitle {
+    font-size: 1.2rem;
+  }
 }
 
 .word{
@@ -85,7 +137,7 @@
 .login-word{
   color: #0D47A1;
   font-size: 30px;
-  text-align: center;
+  
 }
 
 option{

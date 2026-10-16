@@ -56,8 +56,10 @@ function Login({ onGoToRegister }) {
 
   return (
     <div className="login-container">
-      
+     
+     
      <div className="school-header">
+         <img src="/src/assets/School_Logo_cropped.png" alt="School Logo" className="school-logo" />
         <h1 className="school-title">
           Medroso-Mendoza National High School 
           <span className="subtitle">Reading System</span>
@@ -65,7 +67,8 @@ function Login({ onGoToRegister }) {
       </div>
       
       <div className="login-box">
-        <h1 className="login-word">Login</h1>
+        <h1 className="login-word">Welcome Back</h1>
+        <h4 className="login-subtitle">Please login to your account</h4>
 
         {error && <div className="error-message">{error}</div>}
 

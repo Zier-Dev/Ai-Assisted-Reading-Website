@@ -13,11 +13,23 @@ function ModalView({ isOpen, onClose, children }) {
   );
 }
 
+function ModalView1({ isOpen, onClose, children }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="add-box" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 const AdminDashboard = ({ onLogout }) => {
   const [name, setName] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
-   const [role, setRole] = useState("");
+  const [role, setRole] = useState("");
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +39,9 @@ const AdminDashboard = ({ onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+
+  const [search, setSearch] = useState("");
+  const [filterRole, setFilterRole] = useState("All");
 
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
@@ -148,6 +163,22 @@ const AdminDashboard = ({ onLogout }) => {
     setRole("");
     setError("");
   };
+
+  const filteredUsers = users.filter((user) => {
+  const searchTerm = search.toLowerCase().trim();
+
+  const matchesSearch =
+    (user.user || "").toLowerCase().includes(searchTerm) ||
+    (user.full_name || "").toLowerCase().includes(searchTerm);
+
+  const matchesRole =
+    filterRole === "All" || user.role === filterRole;
+
+  return matchesSearch && matchesRole;
+});
+
+
+
   return (
     <div className="admin-dashboard">
       {/* ================= HEADER ================= */}
@@ -212,7 +243,30 @@ const AdminDashboard = ({ onLogout }) => {
             >
               {loading ? "Loading..." : "Refresh"}
             </button>
+              
+
+              <select
+                className="role-filter"
+                value={filterRole}
+                onChange={(event) => setFilterRole(event.target.value)}
+              >
+                <option value="All">All Roles</option>
+                <option value="Admin">Admins</option>
+                <option value="Teacher">Teachers</option>
+                <option value="Student">Students</option>
+              </select>
+
           </div>
+
+          <input
+                className="teacher-search"
+                type="text"
+                placeholder="Search username or full name..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+
+              
         </div>
         {/* ================= USER TABLE ================= */}
         {loading ? (
@@ -232,14 +286,14 @@ const AdminDashboard = ({ onLogout }) => {
                 </tr>
               </thead>
               <tbody>
-                {users.length === 0 ? (
+                              {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="no-data">
-                      No users found in the database.
+                      No users match your search or filter.
                     </td>
                   </tr>
                 ) : (
-                  users.map((user) => (
+                  filteredUsers.map((user) => (
                     <tr key={user.user_id}>
                       <td>{user.user_id}</td>
                       <td>{user.user}</td>
@@ -307,7 +361,7 @@ const AdminDashboard = ({ onLogout }) => {
 
       {/* ================= ADD USER MODAL ================= */}
 
-      <ModalView isOpen={isAddOpen} onClose={handleCloseAddUser}>
+      <ModalView1 isOpen={isAddOpen} onClose={handleCloseAddUser}>
         <div className="register-box">
           <h2>Add User</h2>
 
@@ -368,7 +422,7 @@ const AdminDashboard = ({ onLogout }) => {
             </button>
           </form>
         </div>
-      </ModalView>
+      </ModalView1>
     </div>
   );
 };
