@@ -1,42 +1,46 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const bcrypt = require('bcryptjs');
+
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const bcrypt = require("bcryptjs");
 const Groq = require("groq-sdk");
 
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
-require('dotenv').config({ path: path.join(__dirname, '.env') });
-const pool = require('./db/pool');
+const pool = require("./db/pool");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY
+  apiKey: process.env.GROQ_API_KEY,
 });
 
 app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-  res.set('Pragma', 'no-cache');
-  res.set('Expires', '0');
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
   next();
 });
-
 
 app.use(cors());
 app.use(express.json());
 
 // GET ALL USERS
-app.get('/api/users', async (req, res) => {
+app.get("/api/users", async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM users');
+    const result = await pool.query(
+      "SELECT * FROM users ORDER BY user_id"
+    );
+
     res.json(result.rows);
   } catch (error) {
+    console.error("Get users error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// LOGIN ENDPOINT
-app.post('/api/login', async (req, res) => {
+// LOGIN
+app.post("/api/login", async (req, res) => {
   const { user, password, role } = req.body;
 
   try {
@@ -46,122 +50,254 @@ app.post('/api/login', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'User not found' });
+      return res.status(401).json({ error: "User not found" });
     }
 
     const userData = result.rows[0];
 
-    // Password comparison (checks bcrypt hash, falls back to plain text for old records)
     let isPasswordValid = false;
+
     try {
-      isPasswordValid = await bcrypt.compare(password, userData.password);
+      isPasswordValid = await bcrypt.compare(
+        password,
+        userData.password
+      );
     } catch {
-      isPasswordValid = (userData.password === password);
+      isPasswordValid = userData.password === password;
     }
 
     if (!isPasswordValid && userData.password !== password) {
-      return res.status(401).json({ error: 'Wrong password' });
+      return res.status(401).json({ error: "Wrong password" });
     }
 
     if (role && userData.role !== role) {
-      return res.status(403).json({ error: 'Role mismatch' });
+      return res.status(403).json({ error: "Role mismatch" });
     }
 
+    // Return both ID property names for compatibility.
     res.json({
       success: true,
       user: {
         id: userData.user_id,
+        user_id: userData.user_id,
         username: userData.user,
         name: userData.full_name,
-        role: userData.role
+        full_name: userData.full_name,
+        role: userData.role,
       },
-      message: 'Login successful'
+      message: "Login successful",
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Login failed." });
   }
 });
 
-// REGISTER ENDPOINT
-app.post('/api/register', async (req, res) => {
+// REGISTER
+app.post("/api/register", async (req, res) => {
   try {
     const { user, full_name, password, role } = req.body;
 
-    // 1. Validate required fields
     if (!user || !full_name || !password || !role) {
-      return res.status(400).json({ error: "Missing required fields." });
+      return res.status(400).json({
+        error: "Missing required fields.",
+      });
     }
 
-    // 2. Check if username already exists in database
+    const allowedRoles = ["Student", "Teacher", "Admin"];
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        error: "Invalid role.",
+      });
+    }
+
     const existingUser = await pool.query(
-      'SELECT * FROM users WHERE LOWER("user") = LOWER($1)',
+      'SELECT user_id FROM users WHERE LOWER("user") = LOWER($1)',
       [user]
     );
 
     if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: "Username is already taken." });
+      return res.status(400).json({
+        error: "Username is already taken.",
+      });
     }
 
-    // 3. Hash the password before saving
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Insert new user into PostgreSQL
-    const insertQuery = `
-      INSERT INTO users ("user", full_name, password, role)
-      VALUES ($1, $2, $3, $4)
-      RETURNING user_id, "user", full_name, role;
-    `;
-    const newUserResult = await pool.query(insertQuery, [
-      user,
-      full_name,
-      hashedPassword,
-      role
-    ]);
+    const result = await pool.query(
+      `INSERT INTO users ("user", full_name, password, role)
+       VALUES ($1, $2, $3, $4)
+       RETURNING user_id, "user", full_name, role`,
+      [user, full_name, hashedPassword, role]
+    );
 
-    const newUser = newUserResult.rows[0];
+    const newUser = result.rows[0];
 
-    // 5. Send success response
-    return res.status(201).json({
+    res.status(201).json({
       message: "User registered successfully!",
       user: {
         id: newUser.user_id,
-        user: newUser.user,
+        user_id: newUser.user_id,
+        username: newUser.user,
         full_name: newUser.full_name,
-        role: newUser.role
-      }
+        role: newUser.role,
+      },
     });
   } catch (error) {
-    console.error("Registration Error:", error);
-    return res.status(500).json({ error: error.message || "Internal server error." });
+    console.error("Registration error:", error);
+    res.status(500).json({
+      error: error.message || "Internal server error.",
+    });
   }
 });
 
-// DELETE USER ENDPOINT
-app.delete('/api/users/:id', async (req, res) => {
-  const { id } = req.params;
+// DELETE USER
+app.delete("/api/users/:id", async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM users WHERE user_id = $1 RETURNING *', [id]);
+    const result = await pool.query(
+      "DELETE FROM users WHERE user_id = $1 RETURNING user_id",
+      [req.params.id]
+    );
+
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
-    res.json({ message: 'User deleted successfully' });
+
+    res.json({ message: "User deleted successfully" });
   } catch (error) {
+    console.error("Delete user error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// GENERATE READING PASSAGE
+// GET ALL TEACHERS
+app.get("/api/teachers", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT user_id, full_name
+       FROM users
+       WHERE role = $1
+       ORDER BY full_name`,
+      ["Teacher"]
+    );
 
-app.post('/api/generate-reading', async (req, res) => {
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Get teachers error:", error);
+    res.status(500).json({
+      message: "Failed to load teachers.",
+    });
+  }
+});
+
+// GET A STUDENT'S ASSIGNED TEACHER
+app.get("/api/students/:id/teacher", async (req, res) => {
+  try {
+    const studentId = Number(req.params.id);
+
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      return res.status(400).json({
+        message: "Invalid student ID.",
+      });
+    }
+
+    const result = await pool.query(
+      `SELECT teacher_id
+       FROM users
+       WHERE user_id = $1
+         AND role = $2`,
+      [studentId, "Student"]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Student not found.",
+      });
+    }
+
+    res.json({
+      teacher_id: result.rows[0].teacher_id,
+    });
+  } catch (error) {
+    console.error("Check teacher error:", error);
+    res.status(500).json({
+      message: "Failed to check teacher assignment.",
+    });
+  }
+});
+
+// ASSIGN A TEACHER TO A STUDENT
+app.put("/api/students/:id/teacher", async (req, res) => {
+  try {
+    const studentId = Number(req.params.id);
+    const teacherId = Number(req.body.teacher_id);
+
+    if (
+      !Number.isInteger(studentId) ||
+      studentId <= 0 ||
+      !Number.isInteger(teacherId) ||
+      teacherId <= 0
+    ) {
+      return res.status(400).json({
+        message: "Invalid student or teacher ID.",
+      });
+    }
+
+    // Verify the selected account has the Teacher role.
+    const teacherResult = await pool.query(
+      `SELECT user_id
+       FROM users
+       WHERE user_id = $1
+         AND role = $2`,
+      [teacherId, "Teacher"]
+    );
+
+    if (teacherResult.rows.length === 0) {
+      return res.status(400).json({
+        message: "Selected teacher does not exist.",
+      });
+    }
+
+    // Only update an account with the Student role.
+    const result = await pool.query(
+      `UPDATE users
+       SET teacher_id = $1
+       WHERE user_id = $2
+         AND role = $3
+       RETURNING user_id, teacher_id`,
+      [teacherId, studentId, "Student"]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Student not found.",
+      });
+    }
+
+    res.json({
+      message: "Teacher assigned successfully.",
+      user_id: result.rows[0].user_id,
+      teacher_id: result.rows[0].teacher_id,
+    });
+  } catch (error) {
+    console.error("Assign teacher error:", error);
+    res.status(500).json({
+      message: "Failed to assign teacher.",
+    });
+  }
+});
+
+// GENERATE READING PASSAGE
+app.post("/api/generate-reading", async (req, res) => {
   const { difficulty } = req.body;
 
   try {
-    const allowedDifficulties = ['Easy', 'Medium', 'Hard'];
+    const allowedDifficulties = ["Easy", "Medium", "Hard"];
 
     if (!allowedDifficulties.includes(difficulty)) {
       return res.status(400).json({
-        error: 'Please select Easy, Medium, or Hard.'
+        error: "Please select Easy, Medium, or Hard.",
       });
     }
 
@@ -180,53 +316,46 @@ Rules:
 - Return only the passage.
 `;
 
-const response = await groq.chat.completions.create({
-  model: "openai/gpt-oss-120b",
-  messages: [
-    {
-      role: "user",
-      content: prompt
+    const response = await groq.chat.completions.create({
+      model: "openai/gpt-oss-120b",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      reasoning_effort: "low",
+      max_completion_tokens: 1000,
+      temperature: 0.7,
+    });
+
+    const paragraph = (
+      typeof response.choices?.[0]?.message?.content === "string"
+        ? response.choices[0].message.content
+        : ""
+    ).trim();
+
+    if (!paragraph) {
+      return res.status(500).json({
+        error: "The AI returned an empty passage. Please try again.",
+      });
     }
-  ],
-  reasoning_effort: "low",
-  max_completion_tokens: 1000,
-  temperature: 0.7
-});
 
-console.log("Groq response:", JSON.stringify(response, null, 2));
-
-const message = response.choices?.[0]?.message;
-
-const paragraph = (
-  typeof message?.content === "string"
-    ? message.content
-    : ""
-).trim();
-
-if (!paragraph) {
-  console.error("Groq returned no passage:", message);
-
-  return res.status(500).json({
-    error: "The AI returned an empty passage. Please try again."
-  });
-}
-
-return res.json({
-  success: true,
-  difficulty,
-  paragraph
-});
-
-
+    res.json({
+      success: true,
+      difficulty,
+      paragraph,
+    });
   } catch (error) {
-    console.error('Groq Error:', error);
+    console.error("Groq error:", error);
 
-    return res.status(500).json({
-      error: error.message || 'Failed to generate reading passage.'
+    res.status(500).json({
+      error: error.message || "Failed to generate reading passage.",
     });
   }
 });
 
+// START SERVER — KEEP THIS AT THE BOTTOM
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

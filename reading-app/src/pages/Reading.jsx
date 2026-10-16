@@ -3,6 +3,18 @@ import { useState, useEffect } from "react";
 import "../style/Reading.css";
 
 function Reading() {
+  const API_URL = (
+    import.meta.env.VITE_API_URL || "http://localhost:5000"
+  ).replace(/\/$/, "");
+
+  const [user] = useState(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("user")) || null;
+    } catch {
+      return null;
+    }
+  });
+
   const [difficulty, setDifficulty] = useState("Easy");
   const [started, setStarted] = useState(false);
   const [speed, setSpeed] = useState(0.9);
@@ -12,9 +24,90 @@ function Reading() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const user = JSON.parse(sessionStorage.getItem("user"));
-  const words = paragraph.split(/\s+/).filter(Boolean);
+  // Teacher assignment modal states
+  const [showTeacherModal, setShowTeacherModal] = useState(false);
+  const [teachers, setTeachers] = useState([]);
+  const [selectedTeacher, setSelectedTeacher] = useState("");
+  const [savingTeacher, setSavingTeacher] = useState(false);
+  const [teacherError, setTeacherError] = useState("");
 
+  const words = paragraph.split(/\s+/).filter(Boolean);
+  const userId = user?.user_id ?? user?.id;
+
+  // Check if the student already has an assigned teacher
+  useEffect(() => {
+    if (!userId || user?.role !== "Student") return;
+
+    let cancelled = false;
+
+    async function checkTeacher() {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/students/${userId}/teacher`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to check your teacher assignment.");
+        }
+
+        const data = await response.json();
+
+        if (cancelled) return;
+
+        // No assigned teacher: load teachers and open the modal
+        if (!data.teacher_id) {
+          const teacherResponse = await fetch(
+            `${API_URL}/api/teachers`
+          );
+
+          if (!teacherResponse.ok) {
+            throw new Error("Failed to load the list of teachers.");
+          }
+
+              const teacherData = await teacherResponse.json();
+
+          console.log("Backend teacher data:", teacherData);
+
+          if (cancelled) return;
+
+          const teacherList = Array.isArray(teacherData)
+            ? teacherData
+            : teacherData.teachers || teacherData.rows || [];
+
+          console.log("Parsed teacher list:", teacherList);
+
+          setTeachers(teacherList);
+          setShowTeacherModal(true);
+
+          if (teacherList.length === 0) {
+            setTeacherError("No teachers found.");
+}
+
+          if (teacherList.length === 0) {
+            setTeacherError(
+              "No teachers are available yet. Please contact your administrator."
+            );
+          }
+        }
+      } catch (err) {
+        if (cancelled) return;
+
+        console.error("Teacher assignment error:", err);
+        setTeacherError(
+          err.message || "Unable to check your teacher assignment."
+        );
+        setShowTeacherModal(true);
+      }
+    }
+
+    checkTeacher();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [API_URL, userId, user?.role]);
+
+  // Stop speech when leaving the page
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();
@@ -58,19 +151,20 @@ function Reading() {
     window.speechSynthesis.speak(utterance);
   };
 
+  // Generate a reading passage
   async function startReading() {
     setLoading(true);
     setError("");
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/generate-reading",
+        `${API_URL}/api/generate-reading`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ difficulty })
+          body: JSON.stringify({ difficulty }),
         }
       );
 
@@ -83,7 +177,9 @@ function Reading() {
       }
 
       if (!data.paragraph || !data.paragraph.trim()) {
-        throw new Error("The AI returned an empty passage. Try again.");
+        throw new Error(
+          "The AI returned an empty passage. Try again."
+        );
       }
 
       setParagraph(data.paragraph.trim());
@@ -95,6 +191,56 @@ function Reading() {
       setLoading(false);
     }
   }
+
+  // Save the student's selected teacher
+  const handleTeacherSelection = async () => {
+    if (!selectedTeacher) {
+      setTeacherError("Please select a teacher first.");
+      return;
+    }
+
+    if (!userId) {
+      setTeacherError("Your account information is missing. Please log in again.");
+      return;
+    }
+
+    try {
+      setSavingTeacher(true);
+      setTeacherError("");
+
+      const response = await fetch(
+        `${API_URL}/api/students/${userId}/teacher`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            teacher_id: selectedTeacher,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || data.error || "Failed to assign teacher."
+        );
+      }
+
+      setShowTeacherModal(false);
+      setSelectedTeacher("");
+      setTeacherError("");
+    } catch (err) {
+      console.error("Teacher selection error:", err);
+      setTeacherError(
+        err.message || "Something went wrong while saving your teacher."
+      );
+    } finally {
+      setSavingTeacher(false);
+    }
+  };
 
   function logout() {
     const confirmLogout = window.confirm(
@@ -139,7 +285,7 @@ function Reading() {
                   key={level}
                   className={difficulty === level ? "selected" : ""}
                   onClick={() => setDifficulty(level)}
-                  disabled={loading}
+                  disabled={loading || showTeacherModal}
                 >
                   {level}
                 </button>
@@ -150,14 +296,12 @@ function Reading() {
               Selected: <strong>{difficulty}</strong>
             </p>
 
-            {error && (
-              <p className="error-message">{error}</p>
-            )}
+            {error && <p className="error-message">{error}</p>}
 
             <button
               className="start-button"
               onClick={startReading}
-              disabled={loading}
+              disabled={loading || showTeacherModal}
             >
               {loading ? "Generating..." : "Start Reading"}
             </button>
@@ -208,9 +352,7 @@ function Reading() {
               ))}
             </div>
 
-            {error && (
-              <p className="error-message">{error}</p>
-            )}
+            {error && <p className="error-message">{error}</p>}
 
             <div className="reading-actions">
               <button
@@ -245,6 +387,53 @@ function Reading() {
           </div>
         )}
       </main>
+
+      {/* Teacher assignment modal */}
+      {showTeacherModal && (
+        <div className="teacher-modal-overlay">
+          <div
+            className="teacher-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="teacher-modal-title"
+          >
+            <h2 id="teacher-modal-title">Select Your Teacher</h2>
+
+            <p>
+              You don't have an assigned teacher yet.
+              Please select your teacher to continue.
+            </p>
+
+            <select
+              value={selectedTeacher}
+              onChange={(event) => setSelectedTeacher(event.target.value)}
+              disabled={savingTeacher}
+            >
+              <option value="">-- Choose a teacher --</option>
+
+              {teachers.map((teacher) => (
+                <option
+                  key={teacher.user_id}
+                  value={teacher.user_id}
+                >
+                  {teacher.full_name}
+                </option>
+              ))}
+            </select>
+
+            {teacherError && (
+              <p className="teacher-modal-error">{teacherError}</p>
+            )}
+
+            <button
+              onClick={handleTeacherSelection}
+              disabled={savingTeacher || teachers.length === 0}
+            >
+              {savingTeacher ? "Saving..." : "Confirm Teacher"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

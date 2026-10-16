@@ -249,3 +249,65 @@
 }
 
 
+.teacher-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 9999;
+}
+
+.teacher-modal {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+  color: #222;
+}
+
+.teacher-modal h2 {
+  margin-top: 0;
+  color: #0056b3;
+}
+
+.teacher-modal p {
+  line-height: 1.5;
+  color: #555;
+}
+
+.teacher-modal select {
+  width: 100%;
+  padding: 12px;
+  margin: 12px 0 18px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.teacher-modal button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #0056b3;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.teacher-modal button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.teacher-modal-error {
+  color: #d93025 !important;
+  font-size: 14px;
+}
+
