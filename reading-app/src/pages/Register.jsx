@@ -57,6 +57,16 @@ function Register({ onGoToLogin }) {
   }
 
   return (
+    <div className="register-container">
+
+       <div className="school-header">
+         <img src="/src/assets/School_Logo_cropped.png" alt="School Logo" className="school-logo" />
+        <h1 className="school-title">
+          Medroso-Mendoza National High School 
+          <span className="subtitle">Reading System</span>
+        </h1>
+      </div>
+
     <div className="register-box">
         
       <h2>Register</h2>
@@ -104,6 +114,8 @@ function Register({ onGoToLogin }) {
 
         <button className="back_btn" type="button" onClick={handleBackToLogin}>Back to Login</button>
       </form>
+    </div>
+
     </div>
   );
 }

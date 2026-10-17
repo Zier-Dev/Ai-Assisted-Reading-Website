@@ -5,20 +5,33 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #0D47A1;
-  flex-direction: column;
-  margin: auto;
+  flex-direction: row;
+  gap: 5rem;
+  padding: 40px;
+  box-sizing: border-box;
+
+
+  background:
+        linear-gradient(
+            rgba(10, 65, 145, 0.55),
+            rgba(10, 65, 145, 0.65)
+        ),
+        url("/src/assets/School_background.png");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 
 .register-box {
-  width: 350px;
+  width: 450px;
   padding: 30px;
   border: 1px solid #ddd;
   border-radius: 20px;
   background-color: #fff;
   box-sizing: border-box;
-  margin: auto;
-  margin-top: 200px;
+  margin: 0;
 }
 
 .register-box h2 {
@@ -107,4 +120,37 @@
 
 .back_btn:hover {
   background-color: #3948d1;
+}
+
+.school-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 3rem;
+  flex-shrink: 0;
+}
+
+.school-logo {
+  width: 130px;
+  height: 130px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.school-title {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  max-width: 650px;
+}
+
+.school-header .subtitle {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 0.5rem;
 }
