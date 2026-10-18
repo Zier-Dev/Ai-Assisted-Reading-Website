@@ -25,10 +25,12 @@
 
 .login-box {
   width: 450px;
-  padding: 50px;
+  padding: 30px;
   border: 1px solid #ddd;
   border-radius: 20px;
   background-color: #fff;
+  box-sizing: border-box;
+  margin: 0;
 }
 
 login-word{
@@ -150,18 +152,18 @@ option{
   padding: 8px 16px;
 }
 
-select{
+.login-box input {
+  border-radius: 10px;
+  border: 2px solid #0D47A1;
+}
+
+.login-box select {
   color: #0D47A1;
   border-radius: 10px;
   text-align: center;
   font-size: 14px;
   border: 2px solid #0D47A1;
-}
-
-input{
-  border-radius: 10px;
-  border: 2px solid #0D47A1;
-}
+} 
 
 select:hover{
   background-color: #0D47A1;

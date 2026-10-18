@@ -1,5 +1,9 @@
 html, body, #root {
    background-color: #0D47A1;
+   margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
 }
 
 .admin-dashboard {
@@ -19,6 +23,8 @@ html, body, #root {
   padding: 20px 30px;
   border-radius: 10px;
   margin-bottom: 30px;
+ 
+
 }
 
 .dashboard-header h1 {
@@ -39,6 +45,9 @@ html, body, #root {
   border-radius: 5px;
   cursor: pointer;
   font-size: 16px;
+  width: 110px;
+  display: flex;
+  align-items: center;
 }
 
 .logout-btn:hover {
@@ -92,17 +101,29 @@ html, body, #root {
 
 
 .refresh-btn {
+  font-size: 14px;
+  font-weight: bold;
   padding: 8px 16px;
-  background: #007bff;
-  color: white;
+  background: white;
+  color: #007bff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   margin-left: 15px;
+  height: 40px;
+  width: 110px;
+  border: 1px solid #007bff;
+  display: flex;
+  align-items: center;
+}
 
+.refresh-btn svg {
+  margin-right: 5px;
 }
 
 .adduser-btn {
+  font-size: 14px;
+  font-weight: bold;
   padding: 8px 16px;
   background: #007bff;
   color: white;
@@ -110,8 +131,17 @@ html, body, #root {
   border-radius: 5px;
   cursor: pointer;
   margin-left: auto;
-  
+  height: 40px;
+  width: 110px;
+  display: flex;
+  align-items: center;
 }
+
+.adduser-btn svg {
+  margin-right: 5px;
+}
+
+
 
 .adduser-btn:hover {
   background: #0056b3;
@@ -119,6 +149,7 @@ html, body, #root {
 
 
 .refresh-btn:hover {
+  color: white;
   background: #0056b3;
 }
 
@@ -190,6 +221,7 @@ html, body, #root {
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+    
   }
 
   .dashboard-header {
@@ -197,9 +229,7 @@ html, body, #root {
     text-align: center;
   }
 
-  .logout-btn {
-    margin-top: 10px;
-  }
+ 
 
   .section-header {
     flex-direction: column;
@@ -309,16 +339,25 @@ html, body, #root {
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.view-btn svg{
+  margin-right: 5px;
 }
 
 .role-filter {
-  padding: 8px 16px;
-  background: #007bff;
-  color: white;
+  
+  color: #007bff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   margin-left: 15px;
+  height: 40px;
+  width: 100px;
+  border: 1px solid #007bff;
+  font-weight: bold;
 }
 
 .role-filter:focus {
@@ -362,6 +401,7 @@ html, body, #root {
   gap: 10px;
   padding: 10px;
   margin-top: 500px;
+  margin-left: 25px !important;
 }
 
 
@@ -380,4 +420,113 @@ html, body, #root {
 
 .add-box > .register-box {
   margin-top: 75px;
+}
+
+.circle-icon {
+  width: 70px;
+  height: 70px;
+  background-color: #007bff;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+  
+}
+
+.sidebar-logo-icon {
+  
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+.dashboard-title h1 {
+  margin: 0;
+  color: #0D47A1;
+}
+
+.dashboard-title {
+  display: flex;
+  align-items: center;
+  color: #0D47A1;
+  
+}
+
+.para{
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  
+  margin-left: 60px;
+}
+
+.user-logo-icon{
+   width: 25px;
+  height: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+.circle-icon1{
+  width: 50px;
+  height: 50px;
+  background-color: #007bff;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+}
+
+
+.greetings{
+  margin-top:0 !important;
+  margin-left: 80px !important;
+  color: #666;
+  font-size: 15px;
+}
+
+
+.header {
+  width: 100vw;
+  height: 70px;
+  background-color: white;
+  color: black;
+
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+
+  margin-top: -20px;
+  margin-bottom: 40px;
+}
+
+.header h1 {
+  font-size: 24px;
+  margin: 0;
+  color: #0D47A1;
+}
+
+.header svg {
+  margin-right: 10px;
+  color: #0D47A1;
+  
+}
+
+.school-logo-admin {
+  height: 60px !important;
+  width: 60px;
+  margin-left: auto !important;
+
 }

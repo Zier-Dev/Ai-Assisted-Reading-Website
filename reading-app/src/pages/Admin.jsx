@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react";
 import "../style/Admin.css";
 
+import {
+ BookOpenCheck,
+ Users,
+ CirclePlus,
+ RefreshCcw,
+ LogOut,
+ BookOpenText,
+ Eye
+} from "lucide-react";
+
 function ModalView({ isOpen, onClose, children }) {
   if (!isOpen) return null;
 
@@ -182,14 +192,29 @@ const AdminDashboard = ({ onLogout }) => {
   return (
     <div className="admin-dashboard">
       {/* ================= HEADER ================= */}
+
+      <header className="header">
+        <BookOpenText size={50}> </BookOpenText> <h1>Reading App</h1>  <img src="/src/assets/School_Logo_cropped.png" alt="School Logo" className="school-logo-admin" />
+      </header>
+
+
       <div className="dashboard-header">
         <div className="header-left">
-          <h1>Admin Dashboard</h1>
 
-          <p>Welcome back, {user?.name || user?.full_name || "Admin"}!</p>
+
+        <div className="dashboard-title">
+          <div className="circle-icon"> 
+          <BookOpenCheck size={28} className="sidebar-logo-icon"></BookOpenCheck>
+        </div>
+
+          <h1>Admin Dashboard</h1>
+        </div>
+        
+
+          <p className="greetings">Welcome back, {user?.name || user?.full_name || "Admin"}!</p>
         </div>
         <button onClick={onLogout} className="logout-btn">
-          Logout
+          <LogOut> </LogOut> Logout
         </button>
       </div>
       {/* ================= STATISTICS ================= */}
@@ -225,23 +250,34 @@ const AdminDashboard = ({ onLogout }) => {
       {/* ================= USERS ================= */}
       <div className="users-section">
         <div className="section-header">
+
+           <div className="dashboard-title">
+          <div className="circle-icon1"> 
+          <Users size={28} className="user-logo-icon"></Users>
+        </div>
+
           <h2>All Users</h2>
+        </div>
+          
+
+
+          <p className="para">Manage and view all registered users in the system</p>
 
           <div className="button-group">
-            <button
+            <button 
               className="adduser-btn"
               onClick={() => {
                 setError("");
                 setIsAddOpen(true);
               }}
-            > Add User
+            > <CirclePlus> </CirclePlus> Add User
             </button>
-            <button
+            <button 
               onClick={fetchUsers}
               className="refresh-btn"
               disabled={loading}
             >
-              {loading ? "Loading..." : "Refresh"}
+              <RefreshCcw></RefreshCcw> {loading ? "Loading..." : "Refresh"} 
             </button>
               
 
@@ -257,14 +293,14 @@ const AdminDashboard = ({ onLogout }) => {
               </select>
 
           </div>
-
-          <input
+             
+          <input 
                 className="teacher-search"
                 type="text"
                 placeholder="Search username or full name..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-              />
+              /> 
 
               
         </div>
@@ -301,10 +337,10 @@ const AdminDashboard = ({ onLogout }) => {
                       <td>{user.role}</td>
                       <td>
                         <button
-                          className="view-btn"
+                           className="view-btn"
                           onClick={() => handleViewUser(user)}
                         >
-                          View
+                          <Eye> </Eye> View
                         </button>
                       </td>
                     </tr>

@@ -1,6 +1,5 @@
-/* Styling for Register component to match Login theme */
 
-.register-container {
+.register-container  {
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -32,6 +31,8 @@
   background-color: #fff;
   box-sizing: border-box;
   margin: 0;
+  margin-left: -0px !important;
+
 }
 
 .register-box h2 {
