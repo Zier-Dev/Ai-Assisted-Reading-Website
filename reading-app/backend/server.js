@@ -260,14 +260,20 @@ app.put("/api/students/:id/teacher", async (req, res) => {
     }
 
     // Only update an account with the Student role.
-    const result = await pool.query(
-      `UPDATE users
-       SET teacher_id = $1
-       WHERE user_id = $2
-         AND role = $3
-       RETURNING user_id, teacher_id`,
-      [teacherId, studentId, "Student"]
-    );
+  const result = await pool.query(
+  `UPDATE users
+   SET teacher_id = $1,
+       section = (
+         SELECT section
+         FROM users
+         WHERE user_id = $1
+           AND role = 'Teacher'
+       )
+   WHERE user_id = $2
+     AND role = $3
+   RETURNING user_id, teacher_id, section`,
+  [teacherId, studentId, "Student"]
+);
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -371,6 +377,7 @@ app.get("/api/teachers/:id/students", async (req, res) => {
       `SELECT
           u.user_id,
           u.full_name,
+          u.section,
           COALESCE(
             (
               SELECT json_agg(
@@ -509,4 +516,98 @@ app.delete(
 // START SERVER — KEEP THIS AT THE BOTTOM
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+// GET A TEACHER'S SECTION
+app.get("/api/teachers/:id/section", async (req, res) => {
+  try {
+    const teacherId = Number(req.params.id);
+
+    const result = await pool.query(
+      `SELECT section
+       FROM users
+       WHERE user_id = $1 AND role = 'Teacher'`,
+      [teacherId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Teacher not found.",
+      });
+    }
+
+    res.json({
+      section: result.rows[0].section || "",
+    });
+  } catch (error) {
+    console.error("Get teacher section error:", error);
+    res.status(500).json({
+      message: "Failed to load teacher section.",
+    });
+  }
+});
+
+// SAVE OR UPDATE A TEACHER'S SECTION
+app.put("/api/teachers/:id/section", async (req, res) => {
+  const teacherId = Number(req.params.id);
+  const section = req.body.section?.trim();
+
+  if (!Number.isInteger(teacherId) || teacherId <= 0) {
+    return res.status(400).json({
+      message: "Invalid teacher ID.",
+    });
+  }
+
+  if (!section || section.length > 100) {
+    return res.status(400).json({
+      message: "Section is required and must be 100 characters or fewer.",
+    });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const teacherResult = await client.query(
+      `UPDATE users
+       SET section = $1
+       WHERE user_id = $2 AND role = 'Teacher'
+       RETURNING user_id`,
+      [section, teacherId]
+    );
+
+    if (teacherResult.rowCount === 0) {
+      await client.query("ROLLBACK");
+
+      return res.status(404).json({
+        message: "Teacher not found.",
+      });
+    }
+
+    // Update all students assigned to this teacher.
+    await client.query(
+      `UPDATE users
+       SET section = $1
+       WHERE teacher_id = $2 AND role = 'Student'`,
+      [section, teacherId]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      message: "Section updated successfully.",
+      section,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+
+    console.error("Update teacher section error:", error);
+
+    res.status(500).json({
+      message: "Failed to update section.",
+    });
+  } finally {
+    client.release();
+  }
 });

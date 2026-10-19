@@ -3,8 +3,11 @@ import React, { useState, useEffect } from "react";
 import "../style/Teacher.css";
 
 function Teacher({ user, onLogout }) {
-  const API_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = (
+    import.meta.env.VITE_API_URL || "http://localhost:5000"
+  ).replace(/\/$/, "");
+
+  const teacherId = user?.user_id ?? user?.id;
 
   const [search, setSearch] = useState("");
   const [selectedStudent, setSelectedStudent] = useState(null);
@@ -12,8 +15,65 @@ function Teacher({ user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Section states
+  const [section, setSection] = useState("");
+  const [sectionInput, setSectionInput] = useState("");
+  const [sectionModalOpen, setSectionModalOpen] = useState(false);
+  const [sectionLoading, setSectionLoading] = useState(true);
+  const [sectionSaving, setSectionSaving] = useState(false);
+  const [sectionError, setSectionError] = useState("");
 
-  const teacherId = user?.user_id ?? user?.id;
+  // Fetch the teacher's section.
+  useEffect(() => {
+    if (!teacherId || user?.role !== "Teacher") {
+      setSectionLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    async function fetchSection() {
+      setSectionLoading(true);
+      setSectionError("");
+
+      try {
+        const response = await fetch(
+          `${API_URL}/api/teachers/${teacherId}/section`,
+          { signal: controller.signal }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load your section.");
+        }
+
+        const data = await response.json();
+        const savedSection = data.section || "";
+
+        setSection(savedSection);
+        setSectionInput(savedSection);
+
+        // Require the teacher to set a section if none exists.
+        if (!savedSection.trim()) {
+          setSectionModalOpen(true);
+        }
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error("Error fetching teacher section:", err);
+          setSectionError(
+            err.message || "Unable to load your section."
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setSectionLoading(false);
+        }
+      }
+    }
+
+    fetchSection();
+
+    return () => controller.abort();
+  }, [API_URL, teacherId, user?.role]);
 
   // Fetch only students assigned to this teacher.
   useEffect(() => {
@@ -45,7 +105,6 @@ function Teacher({ user, onLogout }) {
           throw new Error("Invalid student data received.");
         }
 
-        // Match the database fields and prepare safe defaults.
         const formattedStudents = data.map((student) => ({
           id: student.user_id,
           name: student.full_name || "Unnamed Student",
@@ -94,44 +153,115 @@ function Teacher({ user, onLogout }) {
     }
   };
 
+  // Open the section editor.
+  const handleEditSection = () => {
+    setSectionInput(section);
+    setSectionError("");
+    setSectionModalOpen(true);
+  };
+
+  // Save the teacher's section and update the assigned students.
+  const handleSaveSection = async (event) => {
+    event.preventDefault();
+
+    const newSection = sectionInput.trim();
+
+    if (!newSection) {
+      setSectionError("Please enter a section.");
+      return;
+    }
+
+    setSectionSaving(true);
+    setSectionError("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/teachers/${teacherId}/section`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ section: newSection }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to save your section."
+        );
+      }
+
+      setSection(newSection);
+
+      // Update the displayed section for all assigned students.
+      setStudents((currentStudents) =>
+        currentStudents.map((student) => ({
+          ...student,
+          section: newSection,
+        }))
+      );
+
+      // Keep the selected student's history heading up to date.
+      setSelectedStudent((currentStudent) =>
+        currentStudent
+          ? { ...currentStudent, section: newSection }
+          : null
+      );
+
+      setSectionModalOpen(false);
+    } catch (err) {
+      console.error("Save section error:", err);
+      setSectionError(
+        err.message || "Unable to save your section."
+      );
+    } finally {
+      setSectionSaving(false);
+    }
+  };
 
   const handleRemoveStudent = async (studentId) => {
-  const confirmed = window.confirm(
-    "Are you sure you want to remove this student from your assigned students?"
-  );
+    const confirmed = window.confirm(
+      "Are you sure you want to remove this student from your assigned students?"
+    );
 
-  if (!confirmed) return;
+    if (!confirmed) return;
 
-  try {
-    const response = await fetch(
-      `${API_URL}/api/teachers/${teacherId}/students/${studentId}`,
-      {
-        method: "DELETE",
+    try {
+      const response = await fetch(
+        `${API_URL}/api/teachers/${teacherId}/students/${studentId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to remove student."
+        );
       }
-    );
 
-    const data = await response.json();
+      setStudents((currentStudents) =>
+        currentStudents.filter(
+          (student) => student.id !== studentId
+        )
+      );
 
-    if (!response.ok) {
-      throw new Error(data.message || "Failed to remove student.");
+      if (selectedStudent?.id === studentId) {
+        setSelectedStudent(null);
+      }
+
+      alert("Student successfully unassigned.");
+    } catch (err) {
+      console.error("Remove student error:", err);
+      alert(err.message || "Failed to remove student.");
     }
+  };
 
-    // Remove the student from the displayed list
-    setStudents((currentStudents) =>
-      currentStudents.filter((student) => student.id !== studentId)
-    );
-
-    // Close the student's details if currently selected
-    if (selectedStudent?.id === studentId) {
-      setSelectedStudent(null);
-    }
-
-    alert("Student successfully unassigned.");
-  } catch (error) {
-    console.error("Remove student error:", error);
-    alert(error.message || "Failed to remove student.");
-  }
-};
   return (
     <div className="teacher-page">
       <header className="teacher-header">
@@ -149,9 +279,39 @@ function Teacher({ user, onLogout }) {
         <section className="teacher-welcome">
           <h2>
             Welcome,{" "}
-            {user?.full_name || user?.first_name || user?.name || "Teacher"}!
+            {user?.full_name ||
+              user?.first_name ||
+              user?.name ||
+              "Teacher"}
+            !
           </h2>
-          <p>Monitor your students' reading practice and progress.</p>
+
+          <p>
+            Monitor your students' reading practice and progress.
+          </p>
+
+          {/* New section information and button */}
+          <div className="teacher-section-controls">
+            <p>
+              Section:{" "}
+              <strong>
+                {sectionLoading ? "Loading..." : section || "Not set"}
+              </strong>
+            </p>
+
+            <button
+              type="button"
+              className="teacher-section-button"
+              onClick={handleEditSection}
+              disabled={sectionLoading}
+            >
+              Edit Section
+            </button>
+          </div>
+
+          {sectionError && !sectionModalOpen && (
+            <p className="teacher-section-error">{sectionError}</p>
+          )}
         </section>
 
         {/* Dashboard statistics */}
@@ -202,19 +362,19 @@ function Teacher({ user, onLogout }) {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="4" className="teacher-empty">
+                    <td colSpan="5" className="teacher-empty">
                       Loading students...
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan="4" className="teacher-empty">
+                    <td colSpan="5" className="teacher-empty">
                       {error}
                     </td>
                   </tr>
                 ) : filteredStudents.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="teacher-empty">
+                    <td colSpan="5" className="teacher-empty">
                       {search
                         ? "No students match your search."
                         : "No students assigned to you yet."}
@@ -233,13 +393,13 @@ function Teacher({ user, onLogout }) {
                         >
                           View History
                         </button>
-                        
                       </td>
-
                       <td>
                         <button
                           className="teacher-remove-button"
-                          onClick={() => handleRemoveStudent(student.id)}
+                          onClick={() =>
+                            handleRemoveStudent(student.id)
+                          }
                         >
                           Remove Student
                         </button>
@@ -309,6 +469,87 @@ function Teacher({ user, onLogout }) {
           </section>
         )}
       </main>
+
+      {/* Section setup/edit modal */}
+      {sectionModalOpen && (
+        <div
+          className="teacher-section-overlay"
+          onClick={() => {
+            // A teacher cannot dismiss the modal until a section is saved.
+            if (section.trim()) {
+              setSectionModalOpen(false);
+            }
+          }}
+        >
+          <div
+            className="teacher-section-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="teacher-section-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="teacher-section-title">
+              {section.trim() ? "Edit Section" : "Set Your Section"}
+            </h2>
+
+            <p>
+              {section.trim()
+                ? "Updating your section will also update the section of all your assigned students."
+                : "Please set your section before continuing. Your assigned students will use this section."}
+            </p>
+
+            <form onSubmit={handleSaveSection}>
+              <label htmlFor="teacher-section-input">
+                Section Name
+              </label>
+
+              <input
+                id="teacher-section-input"
+                type="text"
+                placeholder="Example: 9-Magsaysay"
+                value={sectionInput}
+                onChange={(event) =>
+                  setSectionInput(event.target.value)
+                }
+                maxLength={100}
+                required
+                autoFocus
+              />
+
+              {sectionError && (
+                <p className="teacher-section-error">
+                  {sectionError}
+                </p>
+              )}
+
+              <div className="teacher-section-modal-actions">
+                {section.trim() && (
+                  <button
+                    type="button"
+                    className="teacher-section-cancel"
+                    onClick={() => {
+                      setSectionInput(section);
+                      setSectionError("");
+                      setSectionModalOpen(false);
+                    }}
+                    disabled={sectionSaving}
+                  >
+                    Cancel
+                  </button>
+                )}
+
+                <button
+                  type="submit"
+                  className="teacher-section-save"
+                  disabled={sectionSaving}
+                >
+                  {sectionSaving ? "Saving..." : "Save Section"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
