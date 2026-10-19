@@ -8,7 +8,12 @@ import {
  RefreshCcw,
  LogOut,
  BookOpenText,
- Eye
+ Eye,
+ UserRoundGroup,
+ ShieldUser,
+ Presentation,
+ GraduationCap
+
 } from "lucide-react";
 
 function ModalView({ isOpen, onClose, children }) {
@@ -220,18 +225,18 @@ const AdminDashboard = ({ onLogout }) => {
       {/* ================= STATISTICS ================= */}
       <div className="stats-grid">
         <div className="stat-card">
-          <h3>Total Users</h3>
+          <h3> <div className="circle-icon1"> <UserRoundGroup></UserRoundGroup> </div> Total Users</h3>
           <p className="stat-number">{users.length}</p>
         </div>
         <div className="stat-card">
-          <h3>Admins</h3>
+          <h3> <div className="circle-icon1"> <ShieldUser></ShieldUser> </div> Admins</h3>
           <p className="stat-number">
             {users.filter((user) => user.role === "Admin").length}
           </p>
         </div>
 
         <div className="stat-card">
-          <h3>Teachers</h3>
+          <h3> <div className="circle-icon1"> <Presentation></Presentation> </div> Teachers</h3>
 
           <p className="stat-number">
             {users.filter((user) => user.role === "Teacher").length}
@@ -239,7 +244,7 @@ const AdminDashboard = ({ onLogout }) => {
         </div>
 
         <div className="stat-card">
-          <h3>Students</h3>
+          <h3> <div className="circle-icon1"> <GraduationCap></GraduationCap> </div> Students</h3>
 
           <p className="stat-number">
             {users.filter((user) => user.role === "Student").length}

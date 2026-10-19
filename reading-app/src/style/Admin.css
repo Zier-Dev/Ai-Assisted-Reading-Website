@@ -75,13 +75,23 @@ html, body, #root {
   color: #666;
   font-size: 14px;
   text-transform: uppercase;
+  display:flex;
+  align-items: center;
+  justify-self: center;
 }
+
+.stat-card svg{
+  color: #007bff;
+}
+
+
 
 .stat-number {
   font-size: 32px;
   font-weight: bold;
   margin: 10px 0 0;
   color: #333;
+ 
 }
 
 /* Users Section */
@@ -139,6 +149,7 @@ html, body, #root {
 
 .adduser-btn svg {
   margin-right: 5px;
+  
 }
 
 
@@ -434,6 +445,7 @@ html, body, #root {
   
 }
 
+
 .sidebar-logo-icon {
   
   width: 40px;
@@ -470,13 +482,13 @@ html, body, #root {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: white;
+  color: #007bff;
 }
 
 .circle-icon1{
   width: 50px;
   height: 50px;
-  background-color: #007bff;
+  background-color: #007bff3d;
   border-radius: 50%;
   display: flex;
   justify-content: center;
