@@ -32,7 +32,7 @@
 }
 
 .teacher-logout {
-  background: #0056b3;
+  background: #dc3545;
   color: white;
   border: none;
   padding: 10px 18px;
@@ -42,7 +42,7 @@
 
 .teacher-logout:hover,
 .teacher-view-button:hover {
-  background: #112d64;
+  background: #e7162b;
 }
 
 /* Main content */
@@ -312,16 +312,17 @@
 
 .teacher-section-button {
   padding: 9px 16px;
-  background-color: #0056b3;
-  color: white;
+  background-color: white;
+  color: #0056b3;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  border: 1px solid #0056b3;
 }
 
 .teacher-section-button:hover {
-  background-color: #003f87;
+  background-color: #c2dbf8;
 }
 
 .teacher-section-button:disabled {

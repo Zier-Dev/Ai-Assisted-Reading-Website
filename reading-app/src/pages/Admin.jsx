@@ -323,6 +323,7 @@ const AdminDashboard = ({ onLogout }) => {
                   <th>Username</th>
                   <th>Full Name</th>
                   <th>Role</th>
+                  <th>Section</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -340,6 +341,7 @@ const AdminDashboard = ({ onLogout }) => {
                       <td>{user.user}</td>
                       <td>{user.full_name}</td>
                       <td>{user.role}</td>
+                      <td>{user.section}</td>
                       <td>
                         <button
                            className="view-btn"
