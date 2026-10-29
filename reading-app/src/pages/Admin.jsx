@@ -208,7 +208,7 @@ const AdminDashboard = ({ onLogout }) => {
          </div>
 
          <button onClick={onLogout} className="logout-btn">
-          <LogOut> </LogOut> Logout
+          <LogOut size ={15}> </LogOut> Logout
         </button>
       </header>
 

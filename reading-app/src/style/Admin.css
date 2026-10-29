@@ -4,6 +4,7 @@ html, body, #root {
   padding: 0;
   width: 100%;
   min-height: 100%;
+  
 }
 
 .admin-dashboard {
@@ -12,6 +13,7 @@ html, body, #root {
   padding: 20px;
   font-family: Arial, sans-serif;
   background-color: #0D47A1;
+
 }
 
 /* Header */
@@ -23,6 +25,8 @@ html, body, #root {
   padding: 20px 30px;
   border-radius: 10px;
   margin-bottom: 30px;
+  gap: 20px;
+  
  
 
 }
@@ -42,17 +46,24 @@ html, body, #root {
 }
 
 .logout-btn {
-  padding: 10px 20px;
-  background: #dc3545;
+  background: #e63946;
   color: white;
   border: none;
-  border-radius: 5px;
+  padding: 11px 20px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 16px;
-  width: 110px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.2s;
   display: flex;
-  align-items: center;
+  height: 35px;
+  width: 110px;
   margin-left: auto;
+  align-items: center;
+}
+.logout-btn:hover {
+  background: #c92332;
+  transform: translateY(-1px);
 }
 
 .logout-btn svg{

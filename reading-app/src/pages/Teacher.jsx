@@ -2,6 +2,10 @@
 import React, { useState, useEffect } from "react";
 import "../style/Teacher.css";
 
+import {
+ LogOut
+} from "lucide-react";
+
 function Teacher({ user, onLogout }) {
   const API_URL = (
     import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -264,16 +268,20 @@ function Teacher({ user, onLogout }) {
 
   return (
     <div className="teacher-page">
-      <header className="teacher-header">
-        <div>
-          <h1>Teacher Dashboard</h1>
-          <p>Medroso-Mendoza National High School</p>
-        </div>
+     <header className="teacher-header">
+  <div className="teacher-brand">
+    <img src="/src/assets/School_Logo_cropped.png" alt="School Logo" className="school-logo-teacher" />
 
-        <button className="teacher-logout" onClick={handleLogout}>
-          Logout
-        </button>
-      </header>
+    <div>
+      <h1>Teacher Dashboard</h1>
+      <p>Medroso-Mendoza National High School</p>
+    </div>
+  </div>
+
+  <button className="teacher-logout" onClick={handleLogout}>
+    <LogOut size ={15}> </LogOut> Logout
+  </button>
+</header>
 
       <main className="teacher-content">
         <section className="teacher-welcome">
