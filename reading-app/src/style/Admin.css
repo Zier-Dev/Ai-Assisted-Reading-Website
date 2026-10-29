@@ -27,6 +27,10 @@ html, body, #root {
 
 }
 
+.header_word {
+  margin-left: 20px;
+}
+
 .dashboard-header h1 {
   margin: 0;
   color: #333;
@@ -48,6 +52,11 @@ html, body, #root {
   width: 110px;
   display: flex;
   align-items: center;
+  margin-left: auto;
+}
+
+.logout-btn svg{
+  color: white !important;
 }
 
 .logout-btn:hover {
@@ -408,11 +417,9 @@ html, body, #root {
 .register-box {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   gap: 10px;
   padding: 10px;
   margin-top: 500px;
-  margin-left: 25px !important;
 }
 
 
@@ -427,6 +434,7 @@ html, body, #root {
   justify-content: flex-start !important;
   padding-top: 0 !important;
   height: 600px !important;
+  padding-left: 25px !important;
 }
 
 .add-box > .register-box {
@@ -436,7 +444,7 @@ html, body, #root {
 .circle-icon {
   width: 70px;
   height: 70px;
-  background-color: #007bff;
+  background-color: #007bff3d;
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -447,13 +455,12 @@ html, body, #root {
 
 
 .sidebar-logo-icon {
-  
   width: 40px;
   height: 40px;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: white;
+  color: #007bff;
 }
 
 .dashboard-title h1 {
@@ -500,8 +507,9 @@ html, body, #root {
 .greetings{
   margin-top:0 !important;
   margin-left: 80px !important;
-  color: #666;
+  color: black !important;
   font-size: 15px;
+  font-weight: bold;
 }
 
 
@@ -539,6 +547,36 @@ html, body, #root {
 .school-logo-admin {
   height: 60px !important;
   width: 60px;
-  margin-left: auto !important;
+}
 
+/* Role badges */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 25px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  width: 100px;
+}
+
+/* Admin - Blue */
+.role-badge.admin {
+  background-color: #e5f0ff;
+  color: #0878f9;
+}
+
+/* Student - Green */
+.role-badge.student {
+  background-color: #e0f7ed;
+  color: #15966a;
+}
+
+/* Teacher - Purple */
+.role-badge.teacher {
+  background-color: #eee8ff;
+  color: #7050dc;
 }

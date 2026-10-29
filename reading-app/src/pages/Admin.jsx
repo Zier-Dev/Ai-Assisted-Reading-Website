@@ -7,12 +7,14 @@ import {
  CirclePlus,
  RefreshCcw,
  LogOut,
- BookOpenText,
  Eye,
  UserRoundGroup,
  ShieldUser,
  Presentation,
- GraduationCap
+ GraduationCap,
+ Shield,
+ Monitor
+
 
 } from "lucide-react";
 
@@ -199,7 +201,15 @@ const AdminDashboard = ({ onLogout }) => {
       {/* ================= HEADER ================= */}
 
       <header className="header">
-        <BookOpenText size={50}> </BookOpenText> <h1>Reading App</h1>  <img src="/src/assets/School_Logo_cropped.png" alt="School Logo" className="school-logo-admin" />
+         <img src="/src/assets/School_Logo_cropped.png" alt="School Logo" className="school-logo-admin" />
+
+        <div className = "header_word"><h1>Medroso-Mendoza National High School</h1>
+              <h4>Reading App</h4>
+         </div>
+
+         <button onClick={onLogout} className="logout-btn">
+          <LogOut> </LogOut> Logout
+        </button>
       </header>
 
 
@@ -218,9 +228,7 @@ const AdminDashboard = ({ onLogout }) => {
 
           <p className="greetings">Welcome back, {user?.name || user?.full_name || "Admin"}!</p>
         </div>
-        <button onClick={onLogout} className="logout-btn">
-          <LogOut> </LogOut> Logout
-        </button>
+        
       </div>
       {/* ================= STATISTICS ================= */}
       <div className="stats-grid">
@@ -340,7 +348,15 @@ const AdminDashboard = ({ onLogout }) => {
                       <td>{user.user_id}</td>
                       <td>{user.user}</td>
                       <td>{user.full_name}</td>
-                      <td>{user.role}</td>
+                      <td>
+                        <span className={`role-badge ${user.role.toLowerCase()}`}>
+                          {user.role === "Admin" && <Shield size={16} />}
+                          {user.role === "Student" && <GraduationCap size={16} />}
+                          {user.role === "Teacher" && <Monitor size={16} />}
+
+                          {user.role}
+                        </span>
+                      </td>
                       <td>{user.section}</td>
                       <td>
                         <button
