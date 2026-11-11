@@ -319,8 +319,17 @@ Rules:
 - Easy: simple vocabulary and short sentences.
 - Medium: moderately longer sentences and varied vocabulary.
 - Hard: longer sentences and more advanced vocabulary, but still understandable.
+
+IMPORTANT ORIGINALITY RULES:
+- Create a completely new passage with a different topic, setting, characters, and events.
+- Do not follow a predictable story template.
+- Do not begin with common openings such as "The sun rose", "One sunny day", "It was a beautiful morning", or similar phrases.
+- Never reuse the same opening sentence structure.
+- Avoid repeatedly writing about towns, mornings, schools, sunlight, and children.
+- Explore different subjects such as animals, nature, technology, inventions, adventures, history, hobbies, and everyday experiences.
+- Make every passage feel different from previously generated passages.
+- Do not add dashes, bullet points, titles, or special formatting.
 - Return only the passage.
-- Dont add any dashes like this - everytime you generate a passage. Just return the passage without any extra formatting or symbols.
 `;
 
     const response = await groq.chat.completions.create({

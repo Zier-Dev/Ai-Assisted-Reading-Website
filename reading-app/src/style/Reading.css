@@ -1,162 +1,326 @@
+
+/* =================================
+   GENERAL
+================================= */
+
 * {
   box-sizing: border-box;
 }
 
 .reading-page {
   min-height: 100vh;
-  background: #0056b3;
+  background: linear-gradient(135deg, #0052b4, #0878e8);
   font-family: Arial, sans-serif;
+  padding-bottom: 35px;
+
+
+    background:
+        linear-gradient(
+            rgba(10, 65, 145, 0.55),
+            rgba(10, 65, 145, 0.65)
+        ),
+        url("/src/assets/reading-background.png");
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 
-/* Header */
+
+/* =================================
+   HEADER
+================================= */
 
 .reading-header {
-  background: white;
-  color: black;
-  padding: 20px 40px;
+  width: 100%;
+  min-height: 90px;
+  background: #ffffff;
+  color: #17365d;
+  padding: 14px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
 }
 
-.reading-header h1 {
+.reading-brand {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+}
+
+.school-logo-reading {
+  width: 65px;
+  height: 65px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.reading-brand-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+}
+
+.reading-brand-text h1 {
   margin: 0;
-  font-size: 28px;
+  padding: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #123c76;
+  line-height: 1.2;
 }
 
-.reading-header p {
-  margin: 5px 0 0;
-  color: black;
+.reading-brand-text p {
+  display: block;
+  margin: 0;
+  padding: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .logout-button {
-  background: #0056b3;
+   background: #e63946;
   color: white;
   border: none;
-  padding: 10px 18px;
-  border-radius: 6px;
+  padding: 11px 20px;
+  border-radius: 8px;
   cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.2s;
+  display: flex;
+  gap: 5px;
+  align-items: center;
 }
 
 .logout-button:hover {
-  background: #112d64;
+  background: #c92332;
+  transform: translateY(-1px);
 }
 
-/* Main content */
+/* =================================
+   MAIN CONTENT
+================================= */
 
 .reading-content {
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 0 20px;
+  max-width: 1150px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 25px 45px;
 }
 
+/* =================================
+   WELCOME SECTION
+================================= */
+
 .welcome {
-  margin-bottom: 25px;
+  margin-bottom: 28px;
   color: white;
+  
 }
 
 .welcome h2 {
-  margin-bottom: 5px;
+  margin: 0 0 9px;
+  font-size: 30px;
+  font-weight: 700;
+  color: white;
+  font-size: 45px;
+  display: flex; 
+  align-items: center;
+  gap: 5px;
+  
 }
 
-.welcome p {
+.welcome h2 svg {
+  display: block;
   color: white;
 }
 
-/* Reading card */
+
+.welcome p {
+  color: #e4efff;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+/* =================================
+   READING CARD
+================================= */
 
 .reading-card {
-  background: white;
-  padding: 35px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 18px;
+  box-shadow: 0 12px 35px rgba(0, 25, 80, 0.16);
+  border: 1px solid #e1eaf7;
+  min-width: 0;
 }
 
 .reading-card h2 {
   margin-top: 0;
+  color: #17365d;
+  font-size: 25px;
+  display: flex;
+  align-items: center;
 }
 
-/* Difficulty */
+/* =================================
+   DIFFICULTY SELECTION
+================================= */
 
 .difficulty-buttons {
   display: flex;
-  gap: 15px;
-  margin: 25px 0;
+  gap: 18px;
+  margin: 30px 0;
 }
 
 .difficulty-buttons button {
   flex: 1;
-  padding: 14px;
-  border: 2px solid black;
-  background: #0056b3;
-  border-radius: 8px;
+  min-height: 65px;
+  padding: 16px;
+  border: 2px solid #0759c7;
+  background: #0759c7;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 17px;
+  font-weight: 600;
   color: white;
+  transition: 0.2s ease;
 }
 
 .difficulty-buttons button:hover {
-  border-color: #333;
+  background: #003f91;
+  border-color: #003f91;
+  transform: translateY(-2px);
 }
 
 .difficulty-buttons .selected {
-  background: white;
-  color: black;
-  border-color: #1f2937;
+  background: #ffffff;
+  color: #0759b7;
+  border-color: #0759b7;
+  box-shadow: 0 0 0 4px #dceaff;
 }
+
+
+
+/* =================================
+   SELECTED DIFFICULTY
+================================= */
 
 .selected-difficulty {
   text-align: center;
-  margin-bottom: 25px;
+  margin: 32px 0;
+  color: #64748b;
+  font-size: 16px;
 }
 
-/* Start button */
+.selected-difficulty strong {
+  color: #0759b7;
+  font-weight: 700;
+}
+
+/* =================================
+   START BUTTON
+================================= */
 
 .start-button {
   width: 100%;
-  padding: 15px;
+  padding: 18px;
   border: none;
-  border-radius: 8px;
-  background: #0056b3;
+  border-radius: 11px;
+  background: linear-gradient(100deg, #0759c7, #0878e8);
   color: white;
-  font-size: 17px;
+  font-size: 18px;
+  font-weight: 700;
   cursor: pointer;
+  transition: 0.2s ease;
+  box-shadow: 0 5px 15px rgba(0, 86, 200, 0.18);
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  gap: 8px;
 }
 
 .start-button:hover {
-  background: #112d64;
+  background: #003f91;
+  transform: translateY(-2px);
 }
 
 
+
+/* =================================
+   READING TITLE
+================================= */
+
+.reading-title {
+  margin-bottom: 20px;
+}
 
 .reading-title span {
   display: inline-block;
-  background: #e5e7eb;
-  padding: 5px 10px;
-  border-radius: 5px;
+  background: #e5efff;
+  color: #0759b7;
+  padding: 7px 13px;
+  border-radius: 7px;
   font-size: 13px;
-  margin-bottom: 10px;
+  font-weight: 600;
+  margin-bottom: 12px;
 }
 
 .reading-title h2 {
-  font-size: 28px;
+  font-size: 29px;
+  color: #17365d;
+  margin: 0;
+  line-height: 1.4;
 }
+
+/* =================================
+   READING PARAGRAPH
+================================= */
 
 .paragraph {
   margin-top: 25px;
-  padding: 25px;
-  background: #f9fafb;
-  border-radius: 8px;
-  border-left: 4px solid #0056b3;
+  padding: 30px;
+  background: #f4f8fd;
+  border-radius: 12px;
+  border-left: 5px solid #0878e8;
+  font-size: 30px;
 }
 
 .paragraph p {
   font-size: 21px;
   line-height: 1.9;
-  color: #333;
+  color: #334155;
+  margin: 0;
 }
 
+/* =================================
+   CLICKABLE WORDS
+================================= */
 
+.clickable-word {
+  cursor: pointer;
+  color: #0759b7;
+  text-decoration: underline;
+  font-size: inherit;
+  transition: color 0.2s;
+}
+
+.clickable-word:hover {
+  color: #003f91;
+}
+
+/* =================================
+   READING ACTIONS
+================================= */
 
 .reading-actions {
   display: flex;
@@ -166,93 +330,81 @@
 
 .back-button,
 .read-button {
-  flex: 1;
-  padding: 14px;
-  border-radius: 8px;
+  padding: 15px 20px;
+  border-radius: 9px;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: 0.2s ease;
 }
 
 .back-button {
   background: white;
-  border: 1px solid #ccc;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.back-button:hover {
+  background: #f1f5f9;
 }
 
 .read-button {
-  background: #0056b3;
+  flex: 1;
+  background: #0759c7;
   color: white;
   border: none;
 }
 
 .read-button:hover {
-  background: #112d64;
+  background: #003f91;
 }
 
-/* Mobile */
+/* =================================
+   READING SPEED
+================================= */
 
-@media (max-width: 600px) {
-  .reading-header {
-    padding: 15px 20px;
-  }
-
-  .reading-header h1 {
-    font-size: 22px;
-  }
-
-  .difficulty-buttons {
-    flex-direction: column;
-  }
-
-  .reading-card {
-    padding: 20px;
-  }
-
-  .paragraph p {
-    font-size: 18px;
-  }
-
-  .reading-actions {
-    flex-direction: column;
-  }
-}
-
-.clickable-word {
-  cursor: pointer;
-  color: #0056b3;
-  text-decoration: underline;
-  font-size: 30px;
-}
-
-
-.speed-button{
-  height: 30px;
+.speed-button {
   display: flex;
+  align-items: center;
   gap: 10px;
-  margin-top: 10px;
-  
+  margin-top: 15px;
+  height: auto;
+  flex-wrap: wrap;
 }
 
-.speed-tap{
-  width: 80px;
-  background: #0056b3;
+.speed-button span {
+  font-size: 15px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.speed-tap {
+  min-width: 80px;
+  padding: 9px 14px;
+  background: #0759c7;
   color: white;
-  border: solid, 2px, black;
-  border-radius: 6px;
+  border: 1px solid #0759c7;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: 0.2s;
 }
 
-.speed-tap:hover{
-  background: #112d64;
+.speed-tap:hover {
+  background: #003f91;
+  border-color: #003f91;
 }
 
-.speed-button span{
-  font-size: 20px;
-}
-
+/* =================================
+   TEACHER MODAL
+================================= */
 
 .teacher-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -272,33 +424,44 @@
 
 .teacher-modal h2 {
   margin-top: 0;
-  color: #0056b3;
+  color: #0759b7;
+  font-size: 23px;
 }
 
 .teacher-modal p {
-  line-height: 1.5;
-  color: #555;
+  line-height: 1.6;
+  color: #64748b;
 }
 
 .teacher-modal select {
   width: 100%;
   padding: 12px;
   margin: 12px 0 18px;
-  border: 1px solid #ccc;
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
   font-size: 15px;
+  outline: none;
+}
+
+.teacher-modal select:focus {
+  border-color: #0878e8;
 }
 
 .teacher-modal button {
   width: 100%;
-  padding: 12px;
+  padding: 13px;
   border: none;
   border-radius: 8px;
-  background: #0056b3;
+  background: #0759c7;
   color: white;
   font-size: 15px;
   font-weight: bold;
   cursor: pointer;
+  transition: 0.2s;
+}
+
+.teacher-modal button:hover {
+  background: #003f91;
 }
 
 .teacher-modal button:disabled {
@@ -311,3 +474,176 @@
   font-size: 14px;
 }
 
+/* =================================
+   TABLET
+================================= */
+
+@media (max-width: 800px) {
+  .reading-content {
+    padding: 30px 20px;
+  }
+
+  .reading-card {
+    padding: 30px;
+  }
+
+  .difficulty-buttons {
+    gap: 12px;
+  }
+}
+
+/* =================================
+   MOBILE
+================================= */
+
+@media (max-width: 600px) {
+  .reading-header {
+    padding: 13px 16px;
+    gap: 10px;
+  }
+
+  .reading-brand {
+    gap: 10px;
+  }
+
+  .school-logo-reading {
+    width: 48px;
+    height: 48px;
+  }
+
+  .reading-brand-text h1 {
+    font-size: 19px;
+  }
+
+  .reading-brand-text p {
+    font-size: 11px;
+  }
+
+  .logout-button {
+    padding: 10px 13px;
+    font-size: 12px;
+  }
+
+  .reading-content {
+    padding: 25px 14px 35px;
+  }
+
+  .welcome h2 {
+    font-size: 23px;
+  }
+
+  .welcome p {
+    font-size: 13px;
+  }
+
+  .reading-card {
+    padding: 22px 17px;
+    border-radius: 13px;
+  }
+
+  .reading-card h2 {
+    font-size: 22px;
+  }
+
+  .difficulty-buttons {
+    flex-direction: column;
+    gap: 12px;
+    margin: 22px 0;
+  }
+
+  .difficulty-buttons button {
+    padding: 15px;
+    min-height: 55px;
+    font-size: 15px;
+  }
+
+  .selected-difficulty {
+    font-size: 14px;
+    margin: 25px 0;
+  }
+
+  .start-button {
+    padding: 15px;
+    font-size: 16px;
+  }
+
+  .reading-title h2 {
+    font-size: 23px;
+  }
+
+  .paragraph {
+    padding: 18px;
+  }
+
+  .paragraph p {
+    font-size: 18px;
+    line-height: 1.8;
+  }
+
+  .reading-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .back-button,
+  .read-button {
+    padding: 13px;
+    font-size: 14px;
+  }
+
+  .speed-button {
+    gap: 7px;
+  }
+
+  .speed-button span {
+    width: 100%;
+  }
+
+  .speed-tap {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .teacher-modal {
+    padding: 22px;
+  }
+}
+
+/* =================================
+   SMALL MOBILE
+================================= */
+
+@media (max-width: 380px) {
+  .reading-header {
+    padding: 12px 10px;
+  }
+
+  .school-logo-reading {
+    width: 40px;
+    height: 40px;
+  }
+
+  .reading-brand-text h1 {
+    font-size: 16px;
+  }
+
+  .reading-brand-text p {
+    font-size: 10px;
+  }
+
+  .logout-button {
+    padding: 9px 10px;
+    font-size: 11px;
+  }
+}
+
+.circle-icon-reading{
+  width: 50px;
+  height: 50px;
+  background-color: #007bff3d;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+}

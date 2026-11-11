@@ -2,6 +2,17 @@
 import { useState, useEffect } from "react";
 import "../style/Reading.css";
 
+import {
+ LogOut,
+ Settings,
+ SignalLow,
+ SignalMedium,
+ SignalHigh,
+ BookOpen,
+ ArrowRight
+
+} from "lucide-react";
+
 function Reading({onLogout}) {
   const API_URL = (
     import.meta.env.VITE_API_URL || "http://localhost:5000"
@@ -284,37 +295,45 @@ async function startReading() {
 
   return (
     <div className="reading-page">
-      <header className="reading-header">
-        <div>
-          <h1>Reading System</h1>
-          <p>Medroso-Mendoza National High School</p>
-        </div>
+ <header className="reading-header">
+  <div className="reading-brand">
+      <img src="/src/assets/School_Logo_cropped.png" alt="School Logo" className="school-logo-admin" />
+    <div className="reading-brand-text">
+      <h1>Reading System</h1>
+      <p>Medroso-Mendoza National High School</p>
+    </div>
+  </div>
 
-        <button className="logout-button" onClick={onLogout}>
-          Logout
-        </button>
-      </header>
+  <button className="logout-button" onClick={onLogout}>
+    <LogOut size ={15}> </LogOut> Logout
+  </button>
+</header>
 
       <main className="reading-content">
         <div className="welcome">
           <h2>
-            Welcome, {user?.first_name || user?.name || "Student"}!
+            <BookOpen size = {45}></BookOpen> Welcome, {user?.first_name || user?.name || "Student"}!
           </h2>
           <p>Practice your reading by choosing a difficulty level.</p>
         </div>
 
         {!started ? (
           <div className="reading-card">
-            <h2>Choose Difficulty</h2>
+            <h2> <div className="circle-icon-reading"> <Settings></Settings> </div> Choose Difficulty</h2>
 
             <div className="difficulty-buttons">
-              {["Easy", "Medium", "Hard"].map((level) => (
+              {[
+                  { level: "Easy", icon: <SignalLow size={18} /> },
+                  { level: "Medium", icon: <SignalMedium size={18} /> },
+                  { level: "Hard", icon: <SignalHigh size={18} /> },
+                ].map(({ level, icon }) => (
                 <button
                   key={level}
                   className={difficulty === level ? "selected" : ""}
                   onClick={() => setDifficulty(level)}
                   disabled={loading || showTeacherModal}
-                >
+                > 
+                  {icon}
                   {level}
                 </button>
               ))}
@@ -332,6 +351,7 @@ async function startReading() {
               disabled={loading || showTeacherModal}
             >
               {loading ? "Generating..." : "Start Reading"}
+              <ArrowRight></ArrowRight>
             </button>
           </div>
         ) : (
