@@ -293,6 +293,8 @@
   border-radius: 12px;
   border-left: 5px solid #0878e8;
   font-size: 30px;
+  
+  
 }
 
 .paragraph p {
@@ -309,13 +311,14 @@
 .clickable-word {
   cursor: pointer;
   color: #0759b7;
-  text-decoration: underline;
   font-size: inherit;
-  transition: color 0.2s;
+  transition: color 0.3s;
 }
 
 .clickable-word:hover {
   color: #003f91;
+  background-color: #7aadfa;
+  border-radius: 10px;
 }
 
 /* =================================

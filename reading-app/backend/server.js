@@ -296,7 +296,9 @@ app.put("/api/students/:id/teacher", async (req, res) => {
 
 // GENERATE READING PASSAGE
 app.post("/api/generate-reading", async (req, res) => {
-  const { difficulty } = req.body;
+    const { difficulty, student_id } = req.body;
+  const studentId = Number(student_id);
+
 
   try {
     const allowedDifficulties = ["Easy", "Medium", "Hard"];
@@ -307,69 +309,308 @@ app.post("/api/generate-reading", async (req, res) => {
       });
     }
 
-    const prompt = `
-Create a short English reading passage for a high school student improving their reading ability.
+    
 
-Difficulty: ${difficulty}
 
-Rules:
-- Write one passage of around 80 to 120 words.
-- Do not include a title, questions, answers, or explanations.
-- Make it suitable for reading aloud.
-- Easy: simple vocabulary and short sentences.
-- Medium: moderately longer sentences and varied vocabulary.
-- Hard: longer sentences and more advanced vocabulary, but still understandable.
-
-IMPORTANT ORIGINALITY RULES:
-- Create a completely new passage with a different topic, setting, characters, and events.
-- Do not follow a predictable story template.
-- Do not begin with common openings such as "The sun rose", "One sunny day", "It was a beautiful morning", or similar phrases.
-- Never reuse the same opening sentence structure.
-- Avoid repeatedly writing about towns, mornings, schools, sunlight, and children.
-- Explore different subjects such as animals, nature, technology, inventions, adventures, history, hobbies, and everyday experiences.
-- Make every passage feel different from previously generated passages.
-- Do not add dashes, bullet points, titles, or special formatting.
-- Return only the passage.
-`;
-
-    const response = await groq.chat.completions.create({
-      model: "openai/gpt-oss-120b",
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      reasoning_effort: "low",
-      max_completion_tokens: 1000,
-      temperature: 0.7,
-    });
-
-    const paragraph = (
-      typeof response.choices?.[0]?.message?.content === "string"
-        ? response.choices[0].message.content
-        : ""
-    ).trim();
-
-    if (!paragraph) {
-      return res.status(500).json({
-        error: "The AI returned an empty passage. Please try again.",
+     // NEW: Make sure the student ID is valid.
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      return res.status(400).json({
+        error: "A valid student ID is required. Please log in again.",
       });
     }
 
-    res.json({
-      success: true,
-      difficulty,
-      paragraph,
-    });
+    // NEW: Verify that the account exists and is a student.
+    const studentResult = await pool.query(
+      "SELECT user_id FROM users WHERE user_id = $1 AND role = $2",
+      [studentId, "Student"]
+    );
+
+    if (studentResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Student account not found.",
+      });
+    }
+
+    // NEW: Search for the oldest passage the student has NOT read.
+    // It only searches passages matching the selected difficulty.
+    const unreadResult = await pool.query(
+      `SELECT rp.passage_id, rp.difficulty, rp.paragraph
+       FROM reading_passages rp
+       WHERE rp.difficulty = $1
+         AND NOT EXISTS (
+           SELECT 1
+           FROM student_passage_reads spr
+           WHERE spr.student_id = $2
+             AND spr.passage_id = rp.passage_id
+         )
+       ORDER BY rp.passage_id ASC
+       LIMIT 1`,
+      [difficulty, studentId]
+    );
+
+    // NEW: If an unread passage exists, display it immediately.
+    // No AI generation is needed.
+    if (unreadResult.rows.length > 0) {
+      const passage = unreadResult.rows[0];
+
+      return res.json({
+        success: true,
+        source: "database",
+        passage_id: passage.passage_id,
+        difficulty: passage.difficulty,
+        paragraph: passage.paragraph,
+      });
+    }
+
+    // NEW: No unread passage exists.
+    // Retrieve ALL existing passages so the AI can avoid repeating them.
+    const existingResult = await pool.query(
+      `SELECT passage_id, difficulty, paragraph
+       FROM reading_passages
+       ORDER BY passage_id ASC`
+    );
+
+    const existingPassages = existingResult.rows;
+
+    // NEW: Convert the existing database passages into text
+    // that can be included in the AI prompt.
+    const previousPassagesText = existingPassages.length
+      ? existingPassages
+          .map(
+            (passage, index) =>
+              `PASSAGE ${index + 1} (ID: ${passage.passage_id}, DIFFICULTY: ${passage.difficulty}):\n${passage.paragraph}`
+          )
+          .join("\n\n")
+      : "There are currently no passages in the database.";
+
+    // NEW: Helper function to get the first sentence.
+    // This helps detect repeated opening sentences.
+    const getFirstSentence = (text) => {
+      const match = text.match(/^.*?[.!?](?:\s|$)/);
+      return (match ? match[0] : text).trim().toLowerCase();
+    };
+
+    // NEW: Normalize text before comparing passages.
+    const normalizeText = (text) =>
+      text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+    let paragraph = "";
+    let accepted = false;
+
+    // NEW: Give the AI up to 3 attempts to produce a different passage.
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const prompt = `
+Write ONE original English reading passage for a high school student.
+
+REQUIRED DIFFICULTY: ${difficulty}
+LENGTH: 80 to 120 words.
+
+The following passages are the complete existing passage collection in the database.
+READ ALL OF THEM before writing. Your new passage must have a DIFFERENT main topic,
+situation, setting, characters, and events. Do not rewrite, paraphrase, imitate,
+or continue any of these passages.
+
+EXISTING DATABASE PASSAGES:
+${previousPassagesText}
+
+STRICT RULES:
+- Choose a main topic that is not already represented in the existing passages.
+- Do not use the same opening sentence or a similar opening structure.
+- Avoid repeating the same common settings, events, and story patterns.
+- Do not default to a town, sunrise, morning, school, children walking, or a new day.
+- Easy: use simple vocabulary and short sentences.
+- Medium: use moderately longer sentences and varied vocabulary.
+- Hard: use longer sentences and more advanced vocabulary, but keep it understandable.
+- Make it suitable for reading aloud.
+- Do not include a title, questions, answers, explanations, bullets, numbering, or dashes.
+- Return only the passage.
+`;
+
+      // Existing Groq API is retained.
+      const response = await groq.chat.completions.create({
+        model: "openai/gpt-oss-120b",
+        messages: [{ role: "user", content: prompt }],
+        reasoning_effort: "low",
+        max_completion_tokens: 1000,
+        temperature: 0.9,
+      });
+
+      const candidate = (
+        typeof response.choices?.[0]?.message?.content === "string"
+          ? response.choices[0].message.content
+          : ""
+      ).trim();
+
+      if (!candidate) continue;
+
+      const candidateNormalized = normalizeText(candidate);
+      const candidateFirstSentence = getFirstSentence(candidate);
+
+      // NEW: Reject an exact duplicate passage.
+      const duplicateContent = existingPassages.some(
+        (passage) =>
+          normalizeText(passage.paragraph) === candidateNormalized
+      );
+
+      // NEW: Reject a passage with an identical first sentence.
+      const duplicateOpening = existingPassages.some(
+        (passage) =>
+          getFirstSentence(passage.paragraph) === candidateFirstSentence
+      );
+
+      if (!duplicateContent && !duplicateOpening) {
+        paragraph = candidate;
+        accepted = true;
+        break;
+      }
+    }
+
+    // NEW: Do not save a passage if all 3 attempts fail.
+    if (!accepted || !paragraph) {
+      return res.status(503).json({
+        error:
+          "The AI could not create a sufficiently different passage. Please try again.",
+      });
+    }
+
+    // NEW: Maintain a maximum of 100 passages.
+    // A transaction and advisory lock prevent simultaneous inserts
+    // from exceeding the limit.
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      await client.query(
+        "SELECT pg_advisory_xact_lock($1::bigint)",
+        [82461027]
+      );
+
+      const countResult = await client.query(
+        "SELECT COUNT(*)::int AS total FROM reading_passages"
+      );
+
+      // NEW: If there are already 100 passages, delete the oldest.
+      // ON DELETE CASCADE removes its associated student read records.
+      if (countResult.rows[0].total >= 100) {
+        await client.query(
+          `WITH oldest AS (
+             SELECT passage_id
+             FROM reading_passages
+             ORDER BY created_at ASC, passage_id ASC
+             LIMIT 1
+           )
+           DELETE FROM reading_passages rp
+           USING oldest
+           WHERE rp.passage_id = oldest.passage_id`
+        );
+      }
+
+      // NEW: Save the newly generated passage to PostgreSQL.
+      const insertResult = await client.query(
+        `INSERT INTO reading_passages (difficulty, paragraph)
+         VALUES ($1, $2)
+         RETURNING passage_id, difficulty, paragraph`,
+        [difficulty, paragraph]
+      );
+
+      await client.query("COMMIT");
+
+      const savedPassage = insertResult.rows[0];
+
+      // Return the saved passage to Reading.jsx.
+      return res.status(201).json({
+        success: true,
+        source: "ai",
+        passage_id: savedPassage.passage_id,
+        difficulty: savedPassage.difficulty,
+        paragraph: savedPassage.paragraph,
+      });
+
+    } catch (databaseError) {
+      await client.query("ROLLBACK");
+      throw databaseError;
+
+    } finally {
+      client.release();
+    }
+
   } catch (error) {
-    console.error("Groq error:", error);
+    console.error("Generate/retrieve reading passage error:", error);
 
     res.status(500).json({
-      error: error.message || "Failed to generate reading passage.",
+      error:
+        error.message || "Failed to retrieve or generate a reading passage.",
     });
   }
 });
+
+
+// NEW: MARK A PASSAGE AS READ BY A STUDENT
+app.post("/api/reading-passages/:passageId/read", async (req, res) => {
+  const passageId = Number(req.params.passageId);
+  const studentId = Number(req.body.student_id);
+
+  try {
+    // Validate the passage and student IDs.
+    if (
+      !Number.isInteger(passageId) ||
+      passageId <= 0 ||
+      !Number.isInteger(studentId) ||
+      studentId <= 0
+    ) {
+      return res.status(400).json({
+        error: "A valid student ID and passage ID are required.",
+      });
+    }
+
+    // Verify the student account.
+    const studentResult = await pool.query(
+      "SELECT user_id FROM users WHERE user_id = $1 AND role = $2",
+      [studentId, "Student"]
+    );
+
+    if (studentResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Student account not found.",
+      });
+    }
+
+    // Verify that the passage exists.
+    const passageResult = await pool.query(
+      "SELECT passage_id FROM reading_passages WHERE passage_id = $1",
+      [passageId]
+    );
+
+    if (passageResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Passage not found.",
+      });
+    }
+
+    // NEW: Record that this student has read this passage.
+    // ON CONFLICT prevents duplicate student-passage records.
+    await pool.query(
+      `INSERT INTO student_passage_reads (student_id, passage_id)
+       VALUES ($1, $2)
+       ON CONFLICT (student_id, passage_id) DO NOTHING`,
+      [studentId, passageId]
+    );
+
+    return res.json({
+      success: true,
+      message: "Passage marked as read.",
+    });
+
+  } catch (error) {
+    console.error("Mark passage as read error:", error);
+
+    return res.status(500).json({
+      error: error.message || "Failed to save reading progress.",
+    });
+  }
+});
+
 
 // GET A TEACHER'S ASSIGNED STUDENTS AND READING HISTORY
 app.get("/api/teachers/:id/students", async (req, res) => {
@@ -620,3 +861,5 @@ app.put("/api/teachers/:id/section", async (req, res) => {
     client.release();
   }
 });
+
+app.listen()

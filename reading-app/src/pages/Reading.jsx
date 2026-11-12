@@ -32,6 +32,7 @@ function Reading({onLogout}) {
   const [speaking, setSpeaking] = useState(false);
   const [activeWord, setActiveWord] = useState(null);
   const [paragraph, setParagraph] = useState("");
+  const [passageId, setPassageId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -163,44 +164,111 @@ function Reading({onLogout}) {
   };
 
 
+// NEW: Mark the current passage as read in the database.
+async function markCurrentPassageAsRead() {
+
+  // If there is no current passage, there is nothing to mark.
+  if (!passageId) return true;
+
+  if (!userId || user?.role !== "Student") {
+    setError("Your student account ID is missing. Please log in again.");
+    return false;
+  }
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/reading-passages/${passageId}/read`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          student_id: userId,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Failed to save this passage as read."
+      );
+    }
+
+    // NEW: Clear the current passage ID after successfully saving.
+    setPassageId(null);
+
+    return true;
+
+  } catch (err) {
+    console.error("Mark passage as read error:", err);
+
+    setError(err.message || "Failed to save reading progress.");
+
+    return false;
+  }
+}
+
+
+// UPDATED: Retrieve the next unread passage from the database.
 async function startReading() {
+
   setLoading(true);
   setError("");
 
   try {
-    // STEP 1: Generate the passage
+
+    // NEW: If the student is requesting another passage,
+    // mark the currently displayed passage as read first.
+    const markedAsRead = await markCurrentPassageAsRead();
+
+    if (!markedAsRead) return;
+
+    // NEW: Make sure the logged-in account is a student.
+    if (!userId || user?.role !== "Student") {
+      throw new Error(
+        "Your student account ID is missing. Please log in again."
+      );
+    }
+
+    // UPDATED: Send both difficulty and student ID to the backend.
     const response = await fetch(`${API_URL}/api/generate-reading`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ difficulty }),
+      body: JSON.stringify({
+        difficulty,
+        student_id: userId,
+      }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || "Failed to generate passage.");
+      throw new Error(
+        data.error || "Failed to retrieve a reading passage."
+      );
     }
 
-    if (!data.paragraph || !data.paragraph.trim()) {
-      throw new Error("The AI returned an empty passage. Try again.");
+    // NEW: Make sure the backend returned a valid passage and ID.
+    if (!data.paragraph || !data.paragraph.trim() || !data.passage_id) {
+      throw new Error("The server returned an invalid reading passage.");
     }
 
-
+    // NEW: Display the passage retrieved from the database or AI.
     setParagraph(data.paragraph.trim());
+
+    // NEW: Remember its database ID for read tracking.
+    setPassageId(data.passage_id);
+
     setStarted(true);
 
-  
-    if (!userId || user?.role !== "Student") {
-      setError(
-        "Passage generated, but your student account ID is missing. Please log in again."
-      );
-      return;
-    }
-
-  
+    // KEEP: Your existing reading attempt history feature.
     try {
+
       const saveResponse = await fetch(
         `${API_URL}/api/reading-attempts`,
         {
@@ -210,7 +278,7 @@ async function startReading() {
           },
           body: JSON.stringify({
             student_id: userId,
-            difficulty: difficulty,
+            difficulty,
           }),
         }
       );
@@ -220,26 +288,36 @@ async function startReading() {
       if (!saveResponse.ok) {
         throw new Error(
           saveData.message ||
-            saveData.error ||
-            "Failed to save reading attempt."
+          saveData.error ||
+          "Failed to save reading attempt."
         );
       }
 
       console.log("Reading attempt saved:", saveData.attempt);
+
     } catch (saveError) {
+
       console.error("Saving attempt error:", saveError);
 
       setError(
-        `Passage generated, but the attempt was not saved: ${saveError.message}`
+        `Passage loaded, but the attempt was not saved: ${saveError.message}`
       );
+
     }
+
   } catch (err) {
-    console.error("Generation error:", err);
-    setError(err.message || "Cannot generate reading passage.");
+
+    console.error("Reading passage error:", err);
+
+    setError(err.message || "Cannot retrieve reading passage.");
+
   } finally {
+
     setLoading(false);
+
   }
 }
+
 
   // Save the student's selected teacher
   const handleTeacherSelection = async () => {
