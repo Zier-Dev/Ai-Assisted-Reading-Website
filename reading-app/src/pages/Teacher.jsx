@@ -266,6 +266,63 @@ function Teacher({ user, onLogout }) {
     }
   };
 
+  
+const handleDeleteAllHistory = async (studentId) => {
+  const confirmed = window.confirm(
+    `Are you sure you want to delete ALL reading history of ${selectedStudent.name}? This action cannot be undone.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const url = `${API_URL}/api/students/${studentId}/reading-attempts`;
+
+    console.log("DELETE request URL:", url);
+
+    const response = await fetch(url, {
+      method: "DELETE",
+    });
+
+    const responseText = await response.text();
+
+    console.log("Server response:", response.status, responseText);
+
+    let data;
+
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      throw new Error(
+        `Server returned HTML or invalid JSON. Status: ${response.status}. Check your backend route and URL.`
+      );
+    }
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to delete reading history.");
+    }
+
+    setStudents((currentStudents) =>
+      currentStudents.map((student) =>
+        student.id === studentId
+          ? { ...student, history: [] }
+          : student
+      )
+    );
+
+    setSelectedStudent((currentStudent) =>
+      currentStudent?.id === studentId
+        ? { ...currentStudent, history: [] }
+        : currentStudent
+    );
+
+    alert("All reading history has been deleted.");
+
+  } catch (err) {
+    console.error("Delete all history error:", err);
+    alert(err.message);
+  }
+};
+
   return (
     <div className="teacher-page">
      <header className="teacher-header">
@@ -362,8 +419,8 @@ function Teacher({ user, onLogout }) {
                   <th>Student Name</th>
                   <th>Section</th>
                   <th>Total Practices</th>
+                  <th>History</th>
                   <th>Action</th>
-                  <th></th>
                 </tr>
               </thead>
 
@@ -431,6 +488,14 @@ function Teacher({ user, onLogout }) {
                 </p>
               </div>
 
+                        <button
+                className="teacher-clear-history-button"
+                onClick={() => handleDeleteAllHistory(selectedStudent.id)}
+                disabled={selectedStudent.history.length === 0}
+              >
+                Delete All History
+              </button>
+
               <button
                 className="teacher-back-button"
                 onClick={() => setSelectedStudent(null)}
@@ -463,7 +528,7 @@ function Teacher({ user, onLogout }) {
                         <td>{practice.date || "—"}</td>
                         <td>{practice.time || "—"}</td>
                         <td>{practice.difficulty || "—"}</td>
-                        <td>
+                       <td>
                           <span className="teacher-status">
                             {practice.status || "Completed"}
                           </span>

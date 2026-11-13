@@ -34,7 +34,6 @@
   justify-content: space-between;
   align-items: center;
   gap: 20px;
- 
   box-shadow: 0 2px 8px rgba(20, 60, 110, 0.05);
 }
 
@@ -298,6 +297,7 @@
 
 .teacher-table tbody tr:hover {
   background: #f5f9ff;
+  
 }
 
 .teacher-table tbody tr:last-child td {
@@ -350,8 +350,8 @@
 
 
 .teacher-back-button {
-  background: #ffffff;
-  color: #315579;
+  background: #0878ed;
+  color: white;
   border: 1px solid #dce5f0;
   padding: 10px 16px;
   border-radius: 7px;
@@ -362,7 +362,8 @@
 }
 
 .teacher-back-button:hover {
-  background: #f1f6fc;
+  background: #0056b3;
+  transform: translateY(-1px);
 }
 
 .teacher-empty {
@@ -370,6 +371,25 @@
   padding: 30px 15px !important;
   color: #8190a6 !important;
   font-size: 14px !important;
+}
+
+.teacher-clear-history-button{
+  background: #e63946;
+  color: #ffffff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.2s, transform 0.2s;
+  margin-left: auto;
+}
+
+.teacher-clear-history-button:hover {
+  background: #c92332;
+  transform: translateY(-1px);
 }
 
 /* ================================
@@ -500,6 +520,7 @@
 
 .teacher-section-cancel:hover {
   background: #dfe7f1;
+  transform: translateY(-1px);
 }
 
 .teacher-section-save {
@@ -509,6 +530,7 @@
 
 .teacher-section-save:hover {
   background: #0056b3;
+  transform: translateY(-1px);
 }
 
 .teacher-section-cancel:disabled,

@@ -1,6 +1,6 @@
 html, body, #root {
-   background-color: #0D47A1;
-   margin: 0;
+  background-color: #0D47A1;
+  margin: 0;
   padding: 0;
   width: 100%;
   min-height: 100%;
@@ -8,7 +8,7 @@ html, body, #root {
 }
 
 .admin-dashboard {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 20px;
   font-family: Arial, sans-serif;
@@ -74,6 +74,20 @@ html, body, #root {
   background: #c82333;
 }
 
+.close-btn-add-user{
+  background-color:#e63946;
+  color: white;
+  height: 30px;
+  width: 30px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  align-self: flex-end;
+  margin-right: 10px;
+  margin-top: 10px;
+  margin-bottom: -30px;
+}
+
 /* Stats Grid */
 .stats-grid {
   display: grid;
@@ -132,7 +146,6 @@ html, body, #root {
 
 .refresh-btn {
   font-size: 14px;
-  font-weight: bold;
   padding: 8px 16px;
   background: white;
   color: #007bff;
@@ -591,3 +604,4 @@ html, body, #root {
   background-color: #eee8ff;
   color: #7050dc;
 }
+

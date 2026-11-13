@@ -713,6 +713,39 @@ app.post("/api/reading-attempts", async (req, res) => {
   }
 });
 
+// DELETE ALL READING HISTORY OF ONE STUDENT
+app.delete("/api/students/:studentId/reading-attempts", async (req, res) => {
+  try {
+    const studentId = Number(req.params.studentId);
+
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      return res.status(400).json({
+        message: "Invalid student ID.",
+      });
+    }
+
+    const result = await pool.query(
+      `DELETE FROM reading_attempts
+       WHERE student_id = $1
+       RETURNING attempt_id`,
+      [studentId]
+    );
+
+    res.json({
+      success: true,
+      message: "All reading history deleted successfully.",
+      deletedCount: result.rowCount,
+    });
+
+  } catch (error) {
+    console.error("Delete all reading history error:", error);
+
+    res.status(500).json({
+      message: "Failed to delete reading history.",
+    });
+  }
+});
+
 
 // REMOVE A STUDENT FROM A TEACHER
 app.delete(
@@ -861,5 +894,7 @@ app.put("/api/teachers/:id/section", async (req, res) => {
     client.release();
   }
 });
+
+
 
 app.listen()

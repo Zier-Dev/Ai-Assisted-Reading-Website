@@ -59,6 +59,7 @@ const AdminDashboard = ({ onLogout }) => {
 
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("All");
+  const [filterSection, setFilterSection] = useState("All");
 
   const user = JSON.parse(sessionStorage.getItem("user") || "{}");
 
@@ -82,6 +83,14 @@ const AdminDashboard = ({ onLogout }) => {
       setLoading(false);
     }
   };
+
+  const sections = [
+  ...new Set(
+    users
+      .map((user) => user.section?.trim())
+      .filter((section) => section)
+  ),
+].sort();
 
   
   const handleViewUser = (selectedUser) => {
@@ -181,7 +190,7 @@ const AdminDashboard = ({ onLogout }) => {
     setError("");
   };
 
-  const filteredUsers = users.filter((user) => {
+const filteredUsers = users.filter((user) => {
   const searchTerm = search.toLowerCase().trim();
 
   const matchesSearch =
@@ -191,7 +200,10 @@ const AdminDashboard = ({ onLogout }) => {
   const matchesRole =
     filterRole === "All" || user.role === filterRole;
 
-  return matchesSearch && matchesRole;
+  const matchesSection =
+    filterSection === "All" || user.section === filterSection;
+
+  return matchesSearch && matchesRole && matchesSection;
 });
 
 
@@ -304,6 +316,21 @@ const AdminDashboard = ({ onLogout }) => {
                 <option value="Teacher">Teachers</option>
                 <option value="Student">Students</option>
               </select>
+
+              <select
+                className="role-filter"
+                value={filterSection}
+                onChange={(event) => setFilterSection(event.target.value)}
+              >
+                <option value="All">All Sections</option>
+
+                {sections.map((section) => (
+                  <option key={section} value={section}>
+                    {section}
+                  </option>
+                ))}
+              </select>
+              
 
           </div>
              
@@ -421,7 +448,12 @@ const AdminDashboard = ({ onLogout }) => {
       {/* ================= ADD USER MODAL ================= */}
 
       <ModalView1 isOpen={isAddOpen} onClose={handleCloseAddUser}>
+        <button className="close-btn-add-user" onClick={handleCloseAddUser}>
+            X
+          </button>
         <div className="register-box">
+          
+
           <h2>Add User</h2>
 
           {error && <div className="error-message">{error}</div>}
