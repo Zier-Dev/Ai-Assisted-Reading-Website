@@ -1,19 +1,18 @@
-
 import { useState, useEffect } from "react";
+
 import "../style/Reading.css";
 
 import {
- LogOut,
- Settings,
- SignalLow,
- SignalMedium,
- SignalHigh,
- BookOpen,
- ArrowRight
-
+  LogOut,
+  Settings,
+  SignalLow,
+  SignalMedium,
+  SignalHigh,
+  BookOpen,
+  ArrowRight,
 } from "lucide-react";
 
-function Reading({onLogout}) {
+function Reading({ onLogout }) {
   const API_URL = (
     import.meta.env.VITE_API_URL || "http://localhost:5000"
   ).replace(/\/$/, "");
@@ -27,26 +26,48 @@ function Reading({onLogout}) {
   });
 
   const [difficulty, setDifficulty] = useState("Easy");
+
   const [started, setStarted] = useState(false);
+
   const [speed, setSpeed] = useState(0.9);
+
   const [speaking, setSpeaking] = useState(false);
+
   const [activeWord, setActiveWord] = useState(null);
+
   const [paragraph, setParagraph] = useState("");
+
   const [passageId, setPassageId] = useState(null);
+
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState("");
 
+  // Assessment mode and activity selection
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [activityError, setActivityError] = useState("");
+  const [assessmentMode, setAssessmentMode] = useState(false);
+  const [assignedAssessment, setAssignedAssessment] = useState(null);
+  const [finishingAssessment, setFinishingAssessment] = useState(false);
+
   // Teacher assignment modal states
+
   const [showTeacherModal, setShowTeacherModal] = useState(false);
+
   const [teachers, setTeachers] = useState([]);
+
   const [selectedTeacher, setSelectedTeacher] = useState("");
+
   const [savingTeacher, setSavingTeacher] = useState(false);
+
   const [teacherError, setTeacherError] = useState("");
 
   const words = paragraph.split(/\s+/).filter(Boolean);
+
   const userId = user?.user_id ?? user?.id;
 
   // Check if the student already has an assigned teacher
+
   useEffect(() => {
     if (!userId || user?.role !== "Student") return;
 
@@ -55,7 +76,7 @@ function Reading({onLogout}) {
     async function checkTeacher() {
       try {
         const response = await fetch(
-          `${API_URL}/api/students/${userId}/teacher`
+          `${API_URL}/api/students/${userId}/teacher`,
         );
 
         if (!response.ok) {
@@ -66,17 +87,19 @@ function Reading({onLogout}) {
 
         if (cancelled) return;
 
+        // A student with an assigned teacher can choose an activity.
+        if (data.teacher_id) setShowActivityModal(true);
+
         // No assigned teacher: load teachers and open the modal
+
         if (!data.teacher_id) {
-          const teacherResponse = await fetch(
-            `${API_URL}/api/teachers`
-          );
+          const teacherResponse = await fetch(`${API_URL}/api/teachers`);
 
           if (!teacherResponse.ok) {
             throw new Error("Failed to load the list of teachers.");
           }
 
-              const teacherData = await teacherResponse.json();
+          const teacherData = await teacherResponse.json();
 
           console.log("Backend teacher data:", teacherData);
 
@@ -89,15 +112,16 @@ function Reading({onLogout}) {
           console.log("Parsed teacher list:", teacherList);
 
           setTeachers(teacherList);
+
           setShowTeacherModal(true);
 
           if (teacherList.length === 0) {
             setTeacherError("No teachers found.");
-}
+          }
 
           if (teacherList.length === 0) {
             setTeacherError(
-              "No teachers are available yet. Please contact your administrator."
+              "No teachers are available yet. Please contact your administrator.",
             );
           }
         }
@@ -105,9 +129,11 @@ function Reading({onLogout}) {
         if (cancelled) return;
 
         console.error("Teacher assignment error:", err);
+
         setTeacherError(
-          err.message || "Unable to check your teacher assignment."
+          err.message || "Unable to check your teacher assignment.",
         );
+
         setShowTeacherModal(true);
       }
     }
@@ -120,6 +146,7 @@ function Reading({onLogout}) {
   }, [API_URL, userId, user?.role]);
 
   // Stop speech when leaving the page
+
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();
@@ -128,7 +155,9 @@ function Reading({onLogout}) {
 
   const stopSpeech = () => {
     window.speechSynthesis.cancel();
+
     setSpeaking(false);
+
     setActiveWord(null);
   };
 
@@ -138,10 +167,13 @@ function Reading({onLogout}) {
     stopSpeech();
 
     const utterance = new SpeechSynthesisUtterance(paragraph);
+
     utterance.rate = speed;
 
     utterance.onstart = () => setSpeaking(true);
+
     utterance.onend = () => setSpeaking(false);
+
     utterance.onerror = () => setSpeaking(false);
 
     window.speechSynthesis.speak(utterance);
@@ -149,268 +181,401 @@ function Reading({onLogout}) {
 
   const handleWordClick = (word, index) => {
     const clean = word.replace(/[^\w'-]/g, "");
+
     if (!clean) return;
 
     stopSpeech();
+
     setActiveWord(index);
 
     const utterance = new SpeechSynthesisUtterance(clean);
+
     utterance.rate = speed;
 
     utterance.onend = () => setActiveWord(null);
+
     utterance.onerror = () => setActiveWord(null);
 
     window.speechSynthesis.speak(utterance);
   };
 
+  // NEW: Mark the current passage as read in the database.
 
-// NEW: Mark the current passage as read in the database.
-async function markCurrentPassageAsRead() {
+  async function markCurrentPassageAsRead() {
+    // If there is no current passage, there is nothing to mark.
 
-  // If there is no current passage, there is nothing to mark.
-  if (!passageId) return true;
+    if (!passageId) return true;
 
-  if (!userId || user?.role !== "Student") {
-    setError("Your student account ID is missing. Please log in again.");
-    return false;
-  }
-
-  try {
-    const response = await fetch(
-      `${API_URL}/api/reading-passages/${passageId}/read`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          student_id: userId,
-        }),
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || "Failed to save this passage as read."
-      );
-    }
-
-    // NEW: Clear the current passage ID after successfully saving.
-    setPassageId(null);
-
-    return true;
-
-  } catch (err) {
-    console.error("Mark passage as read error:", err);
-
-    setError(err.message || "Failed to save reading progress.");
-
-    return false;
-  }
-}
-
-
-// UPDATED: Retrieve the next unread passage from the database.
-async function startReading() {
-
-  setLoading(true);
-  setError("");
-
-  try {
-
-    // NEW: If the student is requesting another passage,
-    // mark the currently displayed passage as read first.
-    const markedAsRead = await markCurrentPassageAsRead();
-
-    if (!markedAsRead) return;
-
-    // NEW: Make sure the logged-in account is a student.
     if (!userId || user?.role !== "Student") {
-      throw new Error(
-        "Your student account ID is missing. Please log in again."
-      );
+      setError("Your student account ID is missing. Please log in again.");
+
+      return false;
     }
 
-    // UPDATED: Send both difficulty and student ID to the backend.
-    const response = await fetch(`${API_URL}/api/generate-reading`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        difficulty,
-        student_id: userId,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || "Failed to retrieve a reading passage."
-      );
-    }
-
-    // NEW: Make sure the backend returned a valid passage and ID.
-    if (!data.paragraph || !data.paragraph.trim() || !data.passage_id) {
-      throw new Error("The server returned an invalid reading passage.");
-    }
-
-    // NEW: Display the passage retrieved from the database or AI.
-    setParagraph(data.paragraph.trim());
-
-    // NEW: Remember its database ID for read tracking.
-    setPassageId(data.passage_id);
-
-    setStarted(true);
-
-    // KEEP: Your existing reading attempt history feature.
     try {
+      const response = await fetch(
+        `${API_URL}/api/reading-passages/${passageId}/read`,
 
-      const saveResponse = await fetch(
-        `${API_URL}/api/reading-attempts`,
         {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
             student_id: userId,
-            difficulty,
           }),
-        }
+        },
       );
 
-      const saveData = await saveResponse.json();
+      const data = await response.json();
 
-      if (!saveResponse.ok) {
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save this passage as read.");
+      }
+
+      // NEW: Clear the current passage ID after successfully saving.
+
+      setPassageId(null);
+
+      return true;
+    } catch (err) {
+      console.error("Mark passage as read error:", err);
+
+      setError(err.message || "Failed to save reading progress.");
+
+      return false;
+    }
+  }
+
+  // UPDATED: Retrieve the next unread passage from the database.
+
+  async function startReading() {
+    setLoading(true);
+
+    setError("");
+
+    try {
+      // NEW: If the student is requesting another passage,
+
+      // mark the currently displayed passage as read first.
+
+      const markedAsRead = await markCurrentPassageAsRead();
+
+      if (!markedAsRead) return;
+
+      // NEW: Make sure the logged-in account is a student.
+
+      if (!userId || user?.role !== "Student") {
         throw new Error(
-          saveData.message ||
-          saveData.error ||
-          "Failed to save reading attempt."
+          "Your student account ID is missing. Please log in again.",
         );
       }
 
-      console.log("Reading attempt saved:", saveData.attempt);
+      // UPDATED: Send both difficulty and student ID to the backend.
 
-    } catch (saveError) {
+      const response = await fetch(`${API_URL}/api/generate-reading`, {
+        method: "POST",
 
-      console.error("Saving attempt error:", saveError);
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-      setError(
-        `Passage loaded, but the attempt was not saved: ${saveError.message}`
+        body: JSON.stringify({
+          difficulty,
+
+          student_id: userId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to retrieve a reading passage.");
+      }
+
+      // NEW: Make sure the backend returned a valid passage and ID.
+
+      if (!data.paragraph || !data.paragraph.trim() || !data.passage_id) {
+        throw new Error("The server returned an invalid reading passage.");
+      }
+
+      // NEW: Display the passage retrieved from the database or AI.
+
+      setParagraph(data.paragraph.trim());
+
+      // NEW: Remember its database ID for read tracking.
+
+      setPassageId(data.passage_id);
+
+      setStarted(true);
+
+      // KEEP: Your existing reading attempt history feature.
+
+      try {
+        const saveResponse = await fetch(
+          `${API_URL}/api/reading-attempts`,
+
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify({
+              student_id: userId,
+
+              difficulty,
+            }),
+          },
+        );
+
+        const saveData = await saveResponse.json();
+
+        if (!saveResponse.ok) {
+          throw new Error(
+            saveData.message ||
+              saveData.error ||
+              "Failed to save reading attempt.",
+          );
+        }
+
+        console.log("Reading attempt saved:", saveData.attempt);
+      } catch (saveError) {
+        console.error("Saving attempt error:", saveError);
+
+        setError(
+          `Passage loaded, but the attempt was not saved: ${saveError.message}`,
+        );
+      }
+    } catch (err) {
+      console.error("Reading passage error:", err);
+
+      setError(err.message || "Cannot retrieve reading passage.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Start the student's assigned assessment.
+  const handleStartAssessment = async () => {
+    if (!userId) {
+      setActivityError(
+        "Your student account ID is missing. Please log in again.",
       );
-
+      return;
     }
 
-  } catch (err) {
+    try {
+      setLoading(true);
+      setActivityError("");
 
-    console.error("Reading passage error:", err);
+      const response = await fetch(
+        `${API_URL}/api/students/${userId}/assessment`,
+      );
+      const data = await response.json();
 
-    setError(err.message || "Cannot retrieve reading passage.");
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to load your assessment.");
+      }
 
-  } finally {
+      if (!data.assessment) {
+        setActivityError(
+          "You don't have an assigned assessment yet. Please choose Practice Reading or contact your teacher.",
+        );
+        return;
+      }
 
-    setLoading(false);
+      setAssignedAssessment(data.assessment);
+      setAssessmentMode(true);
+      setShowActivityModal(false);
+      setStarted(false);
+      setParagraph(data.assessment.paragraph || "");
+      stopSpeech();
+    } catch (err) {
+      console.error("Load assessment error:", err);
+      setActivityError(err.message || "Unable to load your assessment.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  }
-}
+  // Finish and save the assigned assessment as completed.
+  const handleFinishAssessment = async () => {
+    if (!assignedAssessment?.assignment_id) return;
 
+    try {
+      setFinishingAssessment(true);
+      const response = await fetch(
+        `${API_URL}/api/student-assessments/${assignedAssessment.assignment_id}/finish`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ student_id: userId }),
+        },
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to finish your assessment.");
+      }
+
+      setAssessmentMode(false);
+      setAssignedAssessment(null);
+      setParagraph("");
+      setShowActivityModal(true);
+      setActivityError("");
+    } catch (err) {
+      console.error("Finish assessment error:", err);
+      setActivityError(err.message || "Unable to finish your assessment.");
+    } finally {
+      setFinishingAssessment(false);
+    }
+  };
 
   // Save the student's selected teacher
+
   const handleTeacherSelection = async () => {
     if (!selectedTeacher) {
       setTeacherError("Please select a teacher first.");
+
       return;
     }
 
     if (!userId) {
-      setTeacherError("Your account information is missing. Please log in again.");
+      setTeacherError(
+        "Your account information is missing. Please log in again.",
+      );
+
       return;
     }
 
     try {
       setSavingTeacher(true);
+
       setTeacherError("");
 
       const response = await fetch(
         `${API_URL}/api/students/${userId}/teacher`,
+
         {
           method: "PUT",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
             teacher_id: selectedTeacher,
           }),
-        }
+        },
       );
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.message || data.error || "Failed to assign teacher."
+          data.message || data.error || "Failed to assign teacher.",
         );
       }
 
       setShowTeacherModal(false);
+
       setSelectedTeacher("");
+
       setTeacherError("");
+
+      setShowActivityModal(true);
     } catch (err) {
       console.error("Teacher selection error:", err);
+
       setTeacherError(
-        err.message || "Something went wrong while saving your teacher."
+        err.message || "Something went wrong while saving your teacher.",
       );
     } finally {
       setSavingTeacher(false);
     }
   };
 
-  
-
   return (
     <div className="reading-page">
- <header className="reading-header">
-  <div className="reading-brand">
-      <img src="/src/assets/School_Logo_cropped.png" alt="School Logo" className="school-logo-admin" />
-    <div className="reading-brand-text">
-      <h1>Reading System</h1>
-      <p>Medroso-Mendoza National High School</p>
-    </div>
-  </div>
+      <header className="reading-header">
+        <div className="reading-brand">
+          <img
+            src="/src/assets/School_Logo_cropped.png"
+            alt="School Logo"
+            className="school-logo-admin"
+          />
 
-  <button className="logout-button" onClick={onLogout}>
-    <LogOut size ={15}> </LogOut> Logout
-  </button>
-</header>
+          <div className="reading-brand-text">
+            <h1>Reading System</h1>
+
+            <p>Medroso-Mendoza National High School</p>
+          </div>
+        </div>
+
+        <button className="logout-button" onClick={onLogout}>
+          <LogOut size={15}> </LogOut> Logout
+        </button>
+      </header>
 
       <main className="reading-content">
         <div className="welcome">
           <h2>
-            <BookOpen size = {45}></BookOpen> Welcome, {user?.first_name || user?.name || "Student"}!
+            <BookOpen size={45}></BookOpen> Welcome,{" "}
+            {user?.first_name || user?.name || "Student"}!
           </h2>
+
           <p>Practice your reading by choosing a difficulty level.</p>
         </div>
 
-        {!started ? (
+        {assessmentMode ? (
+          <div className="reading-card assessment-card">
+            <div className="reading-title">
+              <span>Assessment</span>
+              <h2>{assignedAssessment?.title || "Reading Assessment"}</h2>
+            </div>
+            <div className="paragraph assessment-paragraph">
+              {assignedAssessment?.paragraph}
+            </div>
+            <div className="reading-actions">
+              <button
+                className="start-button"
+                onClick={handleFinishAssessment}
+                disabled={finishingAssessment}
+              >
+                {finishingAssessment ? "Finishing..." : "Finish"}
+              </button>
+            </div>
+          </div>
+        ) : !started ? (
           <div className="reading-card">
-            <h2> <div className="circle-icon-reading"> <Settings></Settings> </div> Choose Difficulty</h2>
+            <h2>
+              {" "}
+              <div className="circle-icon-reading">
+                {" "}
+                <Settings></Settings>{" "}
+              </div>{" "}
+              Choose Difficulty
+            </h2>
 
             <div className="difficulty-buttons">
               {[
-                  { level: "Easy", icon: <SignalLow size={18} /> },
-                  { level: "Medium", icon: <SignalMedium size={18} /> },
-                  { level: "Hard", icon: <SignalHigh size={18} /> },
-                ].map(({ level, icon }) => (
+                { level: "Easy", icon: <SignalLow size={18} /> },
+
+                { level: "Medium", icon: <SignalMedium size={18} /> },
+
+                { level: "Hard", icon: <SignalHigh size={18} /> },
+              ].map(({ level, icon }) => (
                 <button
                   key={level}
                   className={difficulty === level ? "selected" : ""}
                   onClick={() => setDifficulty(level)}
                   disabled={loading || showTeacherModal}
-                > 
+                >
+                  &#x20;
                   {icon}
                   {level}
                 </button>
@@ -429,6 +594,7 @@ async function startReading() {
               disabled={loading || showTeacherModal}
             >
               {loading ? "Generating..." : "Start Reading"}
+
               <ArrowRight></ArrowRight>
             </button>
           </div>
@@ -436,6 +602,7 @@ async function startReading() {
           <div className="reading-card">
             <div className="reading-title">
               <span>{difficulty}</span>
+
               <h2>Reading Passage</h2>
             </div>
 
@@ -485,7 +652,9 @@ async function startReading() {
                 className="back-button"
                 onClick={() => {
                   stopSpeech();
+
                   setError("");
+
                   setStarted(false);
                 }}
               >
@@ -515,6 +684,40 @@ async function startReading() {
       </main>
 
       {/* Teacher assignment modal */}
+
+      {showActivityModal && !showTeacherModal && (
+        <div className="teacher-modal-overlay">
+          <div
+            className="teacher-modal activity-modal"
+            role="dialog"
+            aria-modal="true"
+          >
+            <h2>Choose Your Activity</h2>
+            <p>Would you like to practice reading or take your assessment?</p>
+            {activityError && (
+              <p className="teacher-modal-error">{activityError}</p>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setActivityError("");
+                setShowActivityModal(false);
+                setAssessmentMode(false);
+              }}
+            >
+              Practice Reading
+            </button>
+            <button
+              type="button"
+              onClick={handleStartAssessment}
+              disabled={loading}
+            >
+              {loading ? "Loading..." : "Assessment"}
+            </button>
+          </div>
+        </div>
+      )}
+
       {showTeacherModal && (
         <div className="teacher-modal-overlay">
           <div
@@ -526,8 +729,8 @@ async function startReading() {
             <h2 id="teacher-modal-title">Select Your Teacher</h2>
 
             <p>
-              You don't have an assigned teacher yet.
-              Please select your teacher to continue.
+              You don't have an assigned teacher yet. Please select your teacher
+              to continue.
             </p>
 
             <select
@@ -538,10 +741,7 @@ async function startReading() {
               <option value="">-- Choose a teacher --</option>
 
               {teachers.map((teacher) => (
-                <option
-                  key={teacher.user_id}
-                  value={teacher.user_id}
-                >
+                <option key={teacher.user_id} value={teacher.user_id}>
                   {teacher.full_name}
                 </option>
               ))}

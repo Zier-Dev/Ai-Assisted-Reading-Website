@@ -1,4 +1,3 @@
-
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -28,10 +27,7 @@ app.use(express.json());
 // GET ALL USERS
 app.get("/api/users", async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT * FROM users ORDER BY user_id"
-    );
-
+    const result = await pool.query("SELECT * FROM users ORDER BY user_id");
     res.json(result.rows);
   } catch (error) {
     console.error("Get users error:", error);
@@ -42,11 +38,12 @@ app.get("/api/users", async (req, res) => {
 // LOGIN
 app.post("/api/login", async (req, res) => {
   const { user, password, role } = req.body;
+  const trimmedUser = typeof user === "string" ? user.trim() : user;
 
   try {
     const result = await pool.query(
       'SELECT * FROM users WHERE "user" = $1',
-      [user]
+      [trimmedUser]
     );
 
     if (result.rows.length === 0) {
@@ -54,14 +51,10 @@ app.post("/api/login", async (req, res) => {
     }
 
     const userData = result.rows[0];
-
     let isPasswordValid = false;
 
     try {
-      isPasswordValid = await bcrypt.compare(
-        password,
-        userData.password
-      );
+      isPasswordValid = await bcrypt.compare(password, userData.password);
     } catch {
       isPasswordValid = userData.password === password;
     }
@@ -74,7 +67,6 @@ app.post("/api/login", async (req, res) => {
       return res.status(403).json({ error: "Role mismatch" });
     }
 
-    // Return both ID property names for compatibility.
     res.json({
       success: true,
       user: {
@@ -205,8 +197,7 @@ app.get("/api/students/:id/teacher", async (req, res) => {
     const result = await pool.query(
       `SELECT teacher_id
        FROM users
-       WHERE user_id = $1
-         AND role = $2`,
+       WHERE user_id = $1 AND role = $2`,
       [studentId, "Student"]
     );
 
@@ -244,12 +235,10 @@ app.put("/api/students/:id/teacher", async (req, res) => {
       });
     }
 
-    // Verify the selected account has the Teacher role.
     const teacherResult = await pool.query(
       `SELECT user_id
        FROM users
-       WHERE user_id = $1
-         AND role = $2`,
+       WHERE user_id = $1 AND role = $2`,
       [teacherId, "Teacher"]
     );
 
@@ -259,21 +248,18 @@ app.put("/api/students/:id/teacher", async (req, res) => {
       });
     }
 
-    // Only update an account with the Student role.
-  const result = await pool.query(
-  `UPDATE users
-   SET teacher_id = $1,
-       section = (
-         SELECT section
-         FROM users
-         WHERE user_id = $1
-           AND role = 'Teacher'
-       )
-   WHERE user_id = $2
-     AND role = $3
-   RETURNING user_id, teacher_id, section`,
-  [teacherId, studentId, "Student"]
-);
+    const result = await pool.query(
+      `UPDATE users
+       SET teacher_id = $1,
+           section = (
+             SELECT section
+             FROM users
+             WHERE user_id = $1 AND role = 'Teacher'
+           )
+       WHERE user_id = $2 AND role = $3
+       RETURNING user_id, teacher_id, section`,
+      [teacherId, studentId, "Student"]
+    );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
@@ -296,9 +282,8 @@ app.put("/api/students/:id/teacher", async (req, res) => {
 
 // GENERATE READING PASSAGE
 app.post("/api/generate-reading", async (req, res) => {
-    const { difficulty, student_id } = req.body;
+  const { difficulty, student_id } = req.body;
   const studentId = Number(student_id);
-
 
   try {
     const allowedDifficulties = ["Easy", "Medium", "Hard"];
@@ -309,17 +294,12 @@ app.post("/api/generate-reading", async (req, res) => {
       });
     }
 
-    
-
-
-     // NEW: Make sure the student ID is valid.
     if (!Number.isInteger(studentId) || studentId <= 0) {
       return res.status(400).json({
         error: "A valid student ID is required. Please log in again.",
       });
     }
 
-    // NEW: Verify that the account exists and is a student.
     const studentResult = await pool.query(
       "SELECT user_id FROM users WHERE user_id = $1 AND role = $2",
       [studentId, "Student"]
@@ -331,8 +311,6 @@ app.post("/api/generate-reading", async (req, res) => {
       });
     }
 
-    // NEW: Search for the oldest passage the student has NOT read.
-    // It only searches passages matching the selected difficulty.
     const unreadResult = await pool.query(
       `SELECT rp.passage_id, rp.difficulty, rp.paragraph
        FROM reading_passages rp
@@ -348,8 +326,6 @@ app.post("/api/generate-reading", async (req, res) => {
       [difficulty, studentId]
     );
 
-    // NEW: If an unread passage exists, display it immediately.
-    // No AI generation is needed.
     if (unreadResult.rows.length > 0) {
       const passage = unreadResult.rows[0];
 
@@ -362,8 +338,6 @@ app.post("/api/generate-reading", async (req, res) => {
       });
     }
 
-    // NEW: No unread passage exists.
-    // Retrieve ALL existing passages so the AI can avoid repeating them.
     const existingResult = await pool.query(
       `SELECT passage_id, difficulty, paragraph
        FROM reading_passages
@@ -372,8 +346,6 @@ app.post("/api/generate-reading", async (req, res) => {
 
     const existingPassages = existingResult.rows;
 
-    // NEW: Convert the existing database passages into text
-    // that can be included in the AI prompt.
     const previousPassagesText = existingPassages.length
       ? existingPassages
           .map(
@@ -383,21 +355,17 @@ app.post("/api/generate-reading", async (req, res) => {
           .join("\n\n")
       : "There are currently no passages in the database.";
 
-    // NEW: Helper function to get the first sentence.
-    // This helps detect repeated opening sentences.
     const getFirstSentence = (text) => {
       const match = text.match(/^.*?[.!?](?:\s|$)/);
       return (match ? match[0] : text).trim().toLowerCase();
     };
 
-    // NEW: Normalize text before comparing passages.
     const normalizeText = (text) =>
       text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
     let paragraph = "";
     let accepted = false;
 
-    // NEW: Give the AI up to 3 attempts to produce a different passage.
     for (let attempt = 1; attempt <= 3; attempt++) {
       const prompt = `
 Write ONE original English reading passage for a high school student.
@@ -426,7 +394,6 @@ STRICT RULES:
 - Return only the passage.
 `;
 
-      // Existing Groq API is retained.
       const response = await groq.chat.completions.create({
         model: "openai/gpt-oss-120b",
         messages: [{ role: "user", content: prompt }],
@@ -446,13 +413,11 @@ STRICT RULES:
       const candidateNormalized = normalizeText(candidate);
       const candidateFirstSentence = getFirstSentence(candidate);
 
-      // NEW: Reject an exact duplicate passage.
       const duplicateContent = existingPassages.some(
         (passage) =>
           normalizeText(passage.paragraph) === candidateNormalized
       );
 
-      // NEW: Reject a passage with an identical first sentence.
       const duplicateOpening = existingPassages.some(
         (passage) =>
           getFirstSentence(passage.paragraph) === candidateFirstSentence
@@ -465,7 +430,6 @@ STRICT RULES:
       }
     }
 
-    // NEW: Do not save a passage if all 3 attempts fail.
     if (!accepted || !paragraph) {
       return res.status(503).json({
         error:
@@ -473,9 +437,6 @@ STRICT RULES:
       });
     }
 
-    // NEW: Maintain a maximum of 100 passages.
-    // A transaction and advisory lock prevent simultaneous inserts
-    // from exceeding the limit.
     const client = await pool.connect();
 
     try {
@@ -490,8 +451,6 @@ STRICT RULES:
         "SELECT COUNT(*)::int AS total FROM reading_passages"
       );
 
-      // NEW: If there are already 100 passages, delete the oldest.
-      // ON DELETE CASCADE removes its associated student read records.
       if (countResult.rows[0].total >= 100) {
         await client.query(
           `WITH oldest AS (
@@ -506,7 +465,6 @@ STRICT RULES:
         );
       }
 
-      // NEW: Save the newly generated passage to PostgreSQL.
       const insertResult = await client.query(
         `INSERT INTO reading_passages (difficulty, paragraph)
          VALUES ($1, $2)
@@ -518,7 +476,6 @@ STRICT RULES:
 
       const savedPassage = insertResult.rows[0];
 
-      // Return the saved passage to Reading.jsx.
       return res.status(201).json({
         success: true,
         source: "ai",
@@ -526,18 +483,14 @@ STRICT RULES:
         difficulty: savedPassage.difficulty,
         paragraph: savedPassage.paragraph,
       });
-
     } catch (databaseError) {
       await client.query("ROLLBACK");
       throw databaseError;
-
     } finally {
       client.release();
     }
-
   } catch (error) {
     console.error("Generate/retrieve reading passage error:", error);
-
     res.status(500).json({
       error:
         error.message || "Failed to retrieve or generate a reading passage.",
@@ -545,14 +498,12 @@ STRICT RULES:
   }
 });
 
-
-// NEW: MARK A PASSAGE AS READ BY A STUDENT
+// MARK A PASSAGE AS READ BY A STUDENT
 app.post("/api/reading-passages/:passageId/read", async (req, res) => {
   const passageId = Number(req.params.passageId);
   const studentId = Number(req.body.student_id);
 
   try {
-    // Validate the passage and student IDs.
     if (
       !Number.isInteger(passageId) ||
       passageId <= 0 ||
@@ -564,7 +515,6 @@ app.post("/api/reading-passages/:passageId/read", async (req, res) => {
       });
     }
 
-    // Verify the student account.
     const studentResult = await pool.query(
       "SELECT user_id FROM users WHERE user_id = $1 AND role = $2",
       [studentId, "Student"]
@@ -576,7 +526,6 @@ app.post("/api/reading-passages/:passageId/read", async (req, res) => {
       });
     }
 
-    // Verify that the passage exists.
     const passageResult = await pool.query(
       "SELECT passage_id FROM reading_passages WHERE passage_id = $1",
       [passageId]
@@ -588,8 +537,6 @@ app.post("/api/reading-passages/:passageId/read", async (req, res) => {
       });
     }
 
-    // NEW: Record that this student has read this passage.
-    // ON CONFLICT prevents duplicate student-passage records.
     await pool.query(
       `INSERT INTO student_passage_reads (student_id, passage_id)
        VALUES ($1, $2)
@@ -601,16 +548,13 @@ app.post("/api/reading-passages/:passageId/read", async (req, res) => {
       success: true,
       message: "Passage marked as read.",
     });
-
   } catch (error) {
     console.error("Mark passage as read error:", error);
-
     return res.status(500).json({
       error: error.message || "Failed to save reading progress.",
     });
   }
 });
-
 
 // GET A TEACHER'S ASSIGNED STUDENTS AND READING HISTORY
 app.get("/api/teachers/:id/students", async (req, res) => {
@@ -655,7 +599,6 @@ app.get("/api/teachers/:id/students", async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error("Fetch assigned students error:", error);
-
     res.status(500).json({
       message: "Failed to fetch assigned students.",
     });
@@ -666,7 +609,6 @@ app.get("/api/teachers/:id/students", async (req, res) => {
 app.post("/api/reading-attempts", async (req, res) => {
   try {
     const { student_id, difficulty } = req.body;
-
     const studentId = Number(student_id);
 
     if (
@@ -682,8 +624,7 @@ app.post("/api/reading-attempts", async (req, res) => {
     const student = await pool.query(
       `SELECT user_id
        FROM users
-       WHERE user_id = $1
-         AND role = $2`,
+       WHERE user_id = $1 AND role = $2`,
       [studentId, "Student"]
     );
 
@@ -706,7 +647,6 @@ app.post("/api/reading-attempts", async (req, res) => {
     });
   } catch (error) {
     console.error("Save reading attempt error:", error);
-
     res.status(500).json({
       message: "Failed to save reading attempt.",
     });
@@ -736,16 +676,13 @@ app.delete("/api/students/:studentId/reading-attempts", async (req, res) => {
       message: "All reading history deleted successfully.",
       deletedCount: result.rowCount,
     });
-
   } catch (error) {
     console.error("Delete all reading history error:", error);
-
     res.status(500).json({
       message: "Failed to delete reading history.",
     });
   }
 });
-
 
 // REMOVE A STUDENT FROM A TEACHER
 app.delete(
@@ -788,18 +725,12 @@ app.delete(
       });
     } catch (error) {
       console.error("Remove student error:", error);
-
       res.status(500).json({
         message: "Failed to remove student.",
       });
     }
   }
 );
-
-// START SERVER — KEEP THIS AT THE BOTTOM
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
 
 // GET A TEACHER'S SECTION
 app.get("/api/teachers/:id/section", async (req, res) => {
@@ -862,13 +793,11 @@ app.put("/api/teachers/:id/section", async (req, res) => {
 
     if (teacherResult.rowCount === 0) {
       await client.query("ROLLBACK");
-
       return res.status(404).json({
         message: "Teacher not found.",
       });
     }
 
-    // Update all students assigned to this teacher.
     await client.query(
       `UPDATE users
        SET section = $1
@@ -884,9 +813,7 @@ app.put("/api/teachers/:id/section", async (req, res) => {
     });
   } catch (error) {
     await client.query("ROLLBACK");
-
     console.error("Update teacher section error:", error);
-
     res.status(500).json({
       message: "Failed to update section.",
     });
@@ -895,6 +822,321 @@ app.put("/api/teachers/:id/section", async (req, res) => {
   }
 });
 
+// =========================
+// ASSESSMENT API
+// =========================
 
+// GET ALL ASSESSMENTS CREATED BY A TEACHER
+app.get("/api/teachers/:teacherId/assessments", async (req, res) => {
+  const teacherId = Number(req.params.teacherId);
 
-app.listen()
+  if (!Number.isInteger(teacherId) || teacherId <= 0) {
+    return res.status(400).json({
+      message: "Invalid teacher ID.",
+    });
+  }
+
+  try {
+    const teacher = await pool.query(
+      "SELECT user_id FROM users WHERE user_id = $1 AND role = 'Teacher'",
+      [teacherId]
+    );
+
+    if (teacher.rowCount === 0) {
+      return res.status(404).json({
+        message: "Teacher not found.",
+      });
+    }
+
+    const result = await pool.query(
+      `SELECT assessment_id, teacher_id, title, paragraph, created_at
+       FROM assessments
+       WHERE teacher_id = $1
+       ORDER BY created_at DESC, assessment_id DESC`,
+      [teacherId]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Get assessments error:", error);
+    res.status(500).json({
+      message: "Failed to load assessments.",
+    });
+  }
+});
+
+// CREATE AN ASSESSMENT
+app.post("/api/teachers/:teacherId/assessments", async (req, res) => {
+  const teacherId = Number(req.params.teacherId);
+  const title =
+    typeof req.body.title === "string" ? req.body.title.trim() : "";
+  const paragraph =
+    typeof req.body.paragraph === "string"
+      ? req.body.paragraph.trim()
+      : "";
+
+  if (!Number.isInteger(teacherId) || teacherId <= 0) {
+    return res.status(400).json({
+      message: "Invalid teacher ID.",
+    });
+  }
+
+  if (!title || !paragraph) {
+    return res.status(400).json({
+      message: "Title and paragraph are required.",
+    });
+  }
+
+  if (title.length > 255) {
+    return res.status(400).json({
+      message: "Title must be 255 characters or fewer.",
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO assessments (teacher_id, title, paragraph)
+       SELECT user_id, $2, $3
+       FROM users
+       WHERE user_id = $1 AND role = 'Teacher'
+       RETURNING assessment_id, teacher_id, title, paragraph, created_at`,
+      [teacherId, title, paragraph]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        message: "Teacher not found.",
+      });
+    }
+
+    res.status(201).json({
+      message: "Assessment created successfully.",
+      assessment: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Create assessment error:", error);
+    res.status(500).json({
+      message: "Failed to create assessment.",
+    });
+  }
+});
+
+// ASSIGN AN ASSESSMENT TO A STUDENT
+// A NEW ASSIGNMENT REPLACES THE PREVIOUS ACTIVE ONE.
+app.post("/api/students/:studentId/assessments", async (req, res) => {
+  const studentId = Number(req.params.studentId);
+  const teacherId = Number(req.body.teacher_id);
+  const assessmentId = Number(req.body.assessment_id);
+
+  if (
+    ![studentId, teacherId, assessmentId].every(
+      (value) => Number.isInteger(value) && value > 0
+    )
+  ) {
+    return res.status(400).json({
+      message: "Invalid student, teacher, or assessment ID.",
+    });
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const student = await client.query(
+      `SELECT user_id
+       FROM users
+       WHERE user_id = $1
+         AND role = 'Student'
+         AND teacher_id = $2
+       FOR UPDATE`,
+      [studentId, teacherId]
+    );
+
+    if (student.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        message: "Student not found or not assigned to this teacher.",
+      });
+    }
+
+    const assessment = await client.query(
+      `SELECT assessment_id
+       FROM assessments
+       WHERE assessment_id = $1
+         AND teacher_id = $2`,
+      [assessmentId, teacherId]
+    );
+
+    if (assessment.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({
+        message: "Assessment not found for this teacher.",
+      });
+    }
+
+    await client.query(
+      `UPDATE student_assessments
+       SET status = 'Replaced'
+       WHERE student_id = $1 AND status = 'Assigned'`,
+      [studentId]
+    );
+
+    const inserted = await client.query(
+      `INSERT INTO student_assessments
+         (student_id, assessment_id, status)
+       VALUES ($1, $2, 'Assigned')
+       RETURNING assignment_id, student_id, assessment_id, assigned_at, status`,
+      [studentId, assessmentId]
+    );
+
+    await client.query("COMMIT");
+
+    res.status(201).json({
+      message: "Assessment assigned successfully.",
+      assignment: inserted.rows[0],
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("Assign assessment error:", error);
+    res.status(500).json({
+      message: "Failed to assign assessment.",
+    });
+  } finally {
+    client.release();
+  }
+});
+
+// GET THE CURRENT ACTIVE ASSESSMENT FOR A STUDENT
+app.get("/api/students/:studentId/assessment", async (req, res) => {
+  const studentId = Number(req.params.studentId);
+
+  if (!Number.isInteger(studentId) || studentId <= 0) {
+    return res.status(400).json({
+      message: "Invalid student ID.",
+    });
+  }
+
+  try {
+    const student = await pool.query(
+      "SELECT user_id FROM users WHERE user_id = $1 AND role = 'Student'",
+      [studentId]
+    );
+
+    if (student.rowCount === 0) {
+      return res.status(404).json({
+        message: "Student not found.",
+      });
+    }
+
+    const result = await pool.query(
+      `SELECT
+         sa.assignment_id,
+         sa.status,
+         sa.assigned_at,
+         a.assessment_id,
+         a.title,
+         a.paragraph
+       FROM student_assessments sa
+       JOIN assessments a
+         ON a.assessment_id = sa.assessment_id
+       WHERE sa.student_id = $1
+         AND sa.status = 'Assigned'
+       ORDER BY sa.assigned_at DESC, sa.assignment_id DESC
+       LIMIT 1`,
+      [studentId]
+    );
+
+    res.json({
+      assessment: result.rows[0] || null,
+    });
+  } catch (error) {
+    console.error("Get student assessment error:", error);
+    res.status(500).json({
+      message: "Failed to load assigned assessment.",
+    });
+  }
+});
+
+// FINISH AN ASSESSMENT
+app.post("/api/student-assessments/:assignmentId/finish", async (req, res) => {
+  const assignmentId = Number(req.params.assignmentId);
+  const studentId = Number(req.body.student_id);
+
+  if (
+    ![assignmentId, studentId].every(
+      (value) => Number.isInteger(value) && value > 0
+    )
+  ) {
+    return res.status(400).json({
+      message: "Invalid assignment or student ID.",
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE student_assessments
+       SET status = 'Completed',
+           completed_at = CURRENT_TIMESTAMP
+       WHERE assignment_id = $1
+         AND student_id = $2
+         AND status = 'Assigned'
+       RETURNING assignment_id, status, completed_at`,
+      [assignmentId, studentId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        message: "Active assessment assignment not found.",
+      });
+    }
+
+    res.json({
+      message: "Assessment completed successfully.",
+      assignment: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Finish assessment error:", error);
+    res.status(500).json({
+      message: "Failed to finish assessment.",
+    });
+  }
+});
+
+// DELETE ALL READING HISTORY OF ONE STUDENT
+app.delete("/api/students/:studentId/reading-attempts", async (req, res) => {
+  try {
+    const studentId = Number(req.params.studentId);
+
+    if (!Number.isInteger(studentId) || studentId <= 0) {
+      return res.status(400).json({
+        message: "Invalid student ID.",
+      });
+    }
+
+    const result = await pool.query(
+      `DELETE FROM reading_attempts
+       WHERE student_id = $1
+       RETURNING attempt_id`,
+      [studentId]
+    );
+
+    res.json({
+      success: true,
+      message: "All reading history deleted successfully.",
+      deletedCount: result.rowCount,
+    });
+
+  } catch (error) {
+    console.error("Delete all reading history error:", error);
+
+    res.status(500).json({
+      message: "Failed to delete reading history.",
+    });
+  }
+});
+
+// START SERVER AFTER ALL ROUTES HAVE BEEN REGISTERED
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

@@ -650,3 +650,116 @@
   align-items: center;
   margin-right: 10px;
 }
+
+/* Full-screen dimmed backdrop */
+.activity-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Modal Card */
+.teacher-modal.activity-modal {
+  background-color: #ffffff;
+  color: #1e293b;
+  width: 100%;
+  max-width: 440px;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 
+              0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Heading */
+.teacher-modal.activity-modal h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* Subtitle / Prompt text */
+.teacher-modal.activity-modal p {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #475569;
+}
+
+/* Error Alert Box */
+.teacher-modal.activity-modal .teacher-modal-error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+/* Shared Button Styles */
+.teacher-modal.activity-modal button {
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+/* Primary Action: "Practice Reading" (First button) */
+.teacher-modal.activity-modal button:first-of-type {
+  background-color: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.teacher-modal.activity-modal button:first-of-type:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+/* Secondary Action: "Assessment" (Last button) */
+.teacher-modal.activity-modal button:last-of-type {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+}
+
+.teacher-modal.activity-modal button:last-of-type:hover:not(:disabled) {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+/* Disabled State (when loading is true) */
+.teacher-modal.activity-modal button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Subtle entrance animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
